@@ -1,5 +1,5 @@
 # Build stage
-FROM maven:3.9.8-eclipse-temurin-21 as build
+FROM maven:3.9.8-eclipse-temurin-21 AS build
 COPY src /home/app/src
 COPY pom.xml /home/app
 COPY settings.xml /root/.m2/settings.xml
@@ -9,7 +9,7 @@ ARG SERVER_PASSWORD
 RUN mvn -f /home/app/pom.xml clean package
 
 # Package stage
-FROM eclipse-temurin:21.0.4_7-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 
 MAINTAINER CZERTAINLY <support@czertainly.com>
 
