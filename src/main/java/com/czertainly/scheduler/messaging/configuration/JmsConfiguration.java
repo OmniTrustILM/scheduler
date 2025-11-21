@@ -8,13 +8,20 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
 import org.springframework.jms.support.converter.MessageConverter;
 import org.springframework.jms.support.converter.MessageType;
+import org.springframework.web.util.UriBuilder;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Configuration
 public class JmsConfiguration {
 
     @Bean
     public ConnectionFactory connectionFactory(MessagingProperties messagingProperties) {
-        JmsConnectionFactory factory = new JmsConnectionFactory(messagingProperties.brokerUrl());
+        UriBuilder builder = UriComponentsBuilder.fromUriString(messagingProperties.brokerUrl());
+        if (messagingProperties.vhost() != null) {
+            builder.queryParam("amqp.vhost", messagingProperties.vhost());
+        }
+
+        JmsConnectionFactory factory = new JmsConnectionFactory(builder.build().toString());
         factory.setUsername(messagingProperties.user());
         factory.setPassword(messagingProperties.password());
         factory.setForceSyncSend(true);

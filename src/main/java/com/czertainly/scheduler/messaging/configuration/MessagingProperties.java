@@ -10,15 +10,19 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public record MessagingProperties(
         @NotBlank String brokerUrl,
-        @NotBlank String queue,
         @NotBlank String user,
         @NotBlank String password,
+        String vhost,
         @NotBlank String exchange,
+        String exchangePrefix,
         @NotNull @Valid RoutingKey routingKey
 ) {
 
     public String destionation() {
-        return "/exchanges/" + exchange() + "/" + routingKey().scheduler();
+        if (exchangePrefix != null) {
+            return exchangePrefix + "/" + exchange() + "/" + routingKey().scheduler();
+        }
+        return exchange() + "/" + routingKey().scheduler();
     }
 
     public record RoutingKey(
