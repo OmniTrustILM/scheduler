@@ -24,12 +24,14 @@ spring:
     jdbc:
       initialize-schema: never
     job-store-type: jdbc
-  rabbitmq:
-    password: ${RABBITMQ_PASSWORD}
-    port: ${RABBITMQ_PORT:5672}
-    host: ${RABBITMQ_HOST}
-    username: ${RABBITMQ_USERNAME}
-    virtual-host: ${RABBITMQ_VHOST:czertainly}
+  messaging:
+    broker-url: ${BROKER_URL}
+    user: ${BROKER_USER}
+    password: ${BROKER_PASSWORD}
+    queue: ${BROKER_QUEUE}
+    exchange: ${BROKER_EXCHANGE}
+    routing-key:
+      scheduler: ${BROKER_ROUTING_KEY_SCHEDULER}
   jpa:
     generate-ddl: 'true'
     hibernate:
