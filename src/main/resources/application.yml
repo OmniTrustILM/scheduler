@@ -28,7 +28,7 @@ spring:
     broker-url: ${BROKER_URL}
     user: ${BROKER_USER}
     password: ${BROKER_PASSWORD}
-    vhost: ${BROKER_VHOST}
+    vhost: ${BROKER_VHOST:}
     exchange: ${BROKER_EXCHANGE:czertainly}
     exchange-prefix: ${BROKER_EXCHANGE_PREFIX}
     routing-key:

@@ -20,7 +20,7 @@ public record MessagingProperties(
 
     public String destionation() {
         if (exchangePrefix != null) {
-            return exchangePrefix + "/" + exchange() + "/" + routingKey().scheduler();
+            return exchangePrefix + exchange() + "/" + routingKey().scheduler();
         }
         return exchange() + "/" + routingKey().scheduler();
     }

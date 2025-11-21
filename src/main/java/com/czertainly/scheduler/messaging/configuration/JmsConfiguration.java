@@ -11,14 +11,17 @@ import org.springframework.jms.support.converter.MessageType;
 import org.springframework.web.util.UriBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 @Configuration
 public class JmsConfiguration {
 
     @Bean
     public ConnectionFactory connectionFactory(MessagingProperties messagingProperties) {
         UriBuilder builder = UriComponentsBuilder.fromUriString(messagingProperties.brokerUrl());
-        if (messagingProperties.vhost() != null) {
-            builder.queryParam("amqp.vhost", messagingProperties.vhost());
+        if (messagingProperties.vhost() != null && !messagingProperties.vhost().isEmpty()) {
+            builder.queryParam("amqp.vhost", URLEncoder.encode(messagingProperties.vhost(), StandardCharsets.UTF_8));
         }
 
         JmsConnectionFactory factory = new JmsConnectionFactory(builder.build().toString());
