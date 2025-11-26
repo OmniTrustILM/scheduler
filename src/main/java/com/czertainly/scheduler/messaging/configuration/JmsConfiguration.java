@@ -1,6 +1,7 @@
 package com.czertainly.scheduler.messaging.configuration;
 
 import jakarta.jms.ConnectionFactory;
+import jakarta.jms.JMSException;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +19,7 @@ import java.nio.charset.StandardCharsets;
 public class JmsConfiguration {
 
     @Bean
-    public ConnectionFactory connectionFactory(MessagingProperties messagingProperties) {
+    public ConnectionFactory connectionFactory(MessagingProperties messagingProperties) throws JMSException {
         UriBuilder builder = UriComponentsBuilder.fromUriString(messagingProperties.brokerUrl());
         if (messagingProperties.vhost() != null && !messagingProperties.vhost().isEmpty()) {
             builder.queryParam("amqp.vhost", URLEncoder.encode(messagingProperties.vhost(), StandardCharsets.UTF_8));
@@ -44,6 +45,7 @@ public class JmsConfiguration {
                                    MessageConverter messageConverter) {
         JmsTemplate template = new JmsTemplate(connectionFactory);
         template.setMessageConverter(messageConverter);
+        template.setPubSubDomain(true);
         return template;
     }
 }

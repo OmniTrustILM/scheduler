@@ -19,6 +19,6 @@ public class JmsMessageProducer {
     }
 
     public void sendMessage(final SchedulerJobExecutionMessage schedulerExecutionMessage) {
-        jmsTemplate.convertAndSend(messagingProperties.destionation(), schedulerExecutionMessage, messagePostProcessor);
+        jmsTemplate.convertAndSend(messagingProperties.producerDestination(), schedulerExecutionMessage, messagePostProcessor);
     }
 }

@@ -40,7 +40,7 @@ class JmsMessageProducerTest {
     void testSendMessage_shouldCallJmsTemplateWithCorrectParameters() {
         // Given
         String exchangeName = "test.exchange";
-        when(messagingProperties.exchange()).thenReturn(exchangeName);
+        when(messagingProperties.producerDestination()).thenReturn(exchangeName);
         
         // When
         jmsMessageProducer.sendMessage(schedulerJobExecutionMessage);
@@ -53,13 +53,13 @@ class JmsMessageProducerTest {
     void testSendMessage_shouldUsePropertiesExchange() {
         // Given
         String expectedExchange = "scheduler.execution";
-        when(messagingProperties.exchange()).thenReturn(expectedExchange);
+        when(messagingProperties.producerDestination()).thenReturn(expectedExchange);
         
         // When
         jmsMessageProducer.sendMessage(schedulerJobExecutionMessage);
         
         // Then
-        verify(messagingProperties).exchange();
+        verify(messagingProperties).producerDestination();
         verify(jmsTemplate).convertAndSend(expectedExchange, schedulerJobExecutionMessage, messagePostProcessor);
     }
 }
