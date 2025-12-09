@@ -14,7 +14,6 @@ public record MessagingProperties(
         @NotBlank String password,
         String vhost,
         @NotBlank String exchange,
-        String exchangePrefix,
         RoutingKey routingKey
 ) {
 
@@ -23,10 +22,7 @@ public record MessagingProperties(
             return exchange();
         }
 
-        if (exchangePrefix != null) {
-            return exchangePrefix + exchange() + "/" + routingKey().scheduler();
-        }
-        return exchange() + "/" + routingKey().scheduler();
+        return "/exchanges/" + exchange() + "/" + routingKey().scheduler();
     }
 
     public record RoutingKey(
