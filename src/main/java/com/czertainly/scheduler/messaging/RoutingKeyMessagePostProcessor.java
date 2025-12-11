@@ -27,7 +27,7 @@ public class RoutingKeyMessagePostProcessor implements MessagePostProcessor {
 
     @Override
     public @NonNull Message postProcessMessage(Message message) throws JMSException {
-        message.setStringProperty("routingKey", messagingProperties.routingKey().scheduler());
+        message.setJMSType(messagingProperties.routingKey().scheduler());
         return message;
     }
 }
