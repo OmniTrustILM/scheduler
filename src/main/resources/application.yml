@@ -29,7 +29,7 @@ spring:
     broker-url: ${BROKER_URL}
     user: ${BROKER_USER}
     password: ${BROKER_PASSWORD}
-    vhost: ${BROKER_VHOST:}
+    vhost: ${BROKER_VHOST:/}
     exchange: ${BROKER_EXCHANGE:czertainly}
     routing-key:
       scheduler: ${BROKER_ROUTING_KEY_SCHEDULER:scheduler}

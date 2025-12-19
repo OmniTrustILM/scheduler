@@ -21,6 +21,6 @@
 | `BROKER_URL`                   | URL of Message broker includes protocol and port                   | ![](https://img.shields.io/badge/-YES-success.svg) | `N/A`         |
 | `BROKER_USER`                  | Username to access RabbitMQ service                                | ![](https://img.shields.io/badge/-YES-success.svg) | `N/A`         |
 | `BROKER_PASSWORD`              | Password to access RabbitMQ service                                | ![](https://img.shields.io/badge/-YES-success.svg) | `N/A`         |
-| `BROKER_VHOST`                 | RabbitMQ vhost (for RabbitMQ use `/` as default)                   | ![](https://img.shields.io/badge/-NO-red.svg)      | `N/A`         |
+| `BROKER_VHOST`                 | RabbitMQ vhost (for RabbitMQ use `/` as default)                   | ![](https://img.shields.io/badge/-NO-red.svg)      | `/`           |
 | `BROKER_EXCHANGE`              | Message broker exchange name                                       | ![](https://img.shields.io/badge/-NO-red.svg)      | `czertainly`  |
 | `BROKER_ROUTING_KEY_SCHEDULER` | Routing key for scheduler                                          | ![](https://img.shields.io/badge/-NO-red.svg)      | `scheduler`   |
