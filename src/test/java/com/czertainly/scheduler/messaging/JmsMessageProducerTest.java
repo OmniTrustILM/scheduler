@@ -11,8 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessagePostProcessor;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class JmsMessageProducerTest {
@@ -59,7 +58,7 @@ class JmsMessageProducerTest {
         jmsMessageProducer.sendMessage(schedulerJobExecutionMessage);
         
         // Then
-        verify(messagingProperties).producerDestination();
+        verify(messagingProperties, times(2)).producerDestination();
         verify(jmsTemplate).convertAndSend(expectedExchange, schedulerJobExecutionMessage, messagePostProcessor);
     }
 }
