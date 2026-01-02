@@ -4,6 +4,7 @@ import jakarta.jms.ConnectionFactory;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jms.connection.CachingConnectionFactory;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
 import org.springframework.jms.support.converter.MessageConverter;
@@ -31,7 +32,10 @@ public class JmsConfiguration {
         factory.setUsername(messagingProperties.user());
         factory.setPassword(messagingProperties.password());
         factory.setForceSyncSend(true);
-        return factory;
+
+        CachingConnectionFactory cachingFactory = new CachingConnectionFactory(factory);
+        cachingFactory.setSessionCacheSize(10);
+        return cachingFactory;
     }
 
     @Bean
