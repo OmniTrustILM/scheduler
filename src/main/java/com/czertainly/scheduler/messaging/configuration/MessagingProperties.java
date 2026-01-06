@@ -8,7 +8,7 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "spring.messaging")
 @Validated
 public record MessagingProperties(
-        @NotNull BrokerName name,
+        @NotNull MessagingProperties.BrokerType brokerType,
         @NotBlank String brokerUrl,
         @NotBlank String user,
         @NotBlank String password,
@@ -18,7 +18,7 @@ public record MessagingProperties(
 ) {
 
     public String producerDestination() {
-        if (name == BrokerName.SERVICEBUS) {
+        if (brokerType == BrokerType.SERVICEBUS) {
             return exchange();
         }
 
@@ -30,7 +30,7 @@ public record MessagingProperties(
     ) {
     }
 
-    public enum BrokerName {
+    public enum BrokerType {
         RABBITMQ,
         SERVICEBUS
     }

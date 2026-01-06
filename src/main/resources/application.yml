@@ -25,7 +25,7 @@ spring:
       initialize-schema: never
     job-store-type: jdbc
   messaging:
-    name: ${BROKER_NAME:SERVICEBUS}
+    broker-type: ${BROKER_NAME:SERVICEBUS}
     broker-url: ${BROKER_URL}
     user: ${BROKER_USER}
     password: ${BROKER_PASSWORD}
