@@ -27,6 +27,7 @@ spring:
   messaging:
     broker-type: ${BROKER_NAME:SERVICEBUS}
     broker-url: ${BROKER_URL}
+    session-cache-size: ${BROKER_SESSION_CACHE_SIZE:10}
     user: ${BROKER_USER}
     password: ${BROKER_PASSWORD}
     vhost: ${BROKER_VHOST:/}

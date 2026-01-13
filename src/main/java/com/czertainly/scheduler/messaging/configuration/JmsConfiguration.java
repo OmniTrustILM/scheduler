@@ -1,5 +1,6 @@
 package com.czertainly.scheduler.messaging.configuration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.jms.ConnectionFactory;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.springframework.context.annotation.Bean;
@@ -34,13 +35,14 @@ public class JmsConfiguration {
         factory.setForceSyncSend(true);
 
         CachingConnectionFactory cachingFactory = new CachingConnectionFactory(factory);
-        cachingFactory.setSessionCacheSize(10);
+        cachingFactory.setSessionCacheSize(messagingProperties.sessionCacheSize());
         return cachingFactory;
     }
 
     @Bean
-    public MessageConverter messageConverter() {
+    public MessageConverter messageConverter(ObjectMapper objectMapper) {
         MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
+        converter.setObjectMapper(objectMapper);
         converter.setTargetType(MessageType.TEXT);
         return converter;
     }
