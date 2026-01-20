@@ -73,6 +73,13 @@
             <version>2.9.0</version>
         </dependency>
 
+        <!-- Azure Identity for AAD authentication -->
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-identity</artifactId>
+            <version>1.18.1</version>
+        </dependency>
+
         <!--  Quartz libraries -->
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
