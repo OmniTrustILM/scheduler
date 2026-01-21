@@ -24,15 +24,15 @@ public class JmsConfiguration {
 
     @Bean
     public ConnectionFactory connectionFactory(MessagingProperties messagingProperties) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(messagingProperties.brokerUrl());
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(messagingProperties.getEffectiveBrokerUrl());
 
         // For RabbitMQ with AMQP 1.0, vhost is specified in the AMQP Open frame hostname field
         // The hostname field must be "vhost:name" format according to RabbitMQ AMQP 1.0 docs
         // We use amqp.vhost connection property to set this value
         if (messagingProperties.brokerType() == MessagingProperties.BrokerType.RABBITMQ &&
-                messagingProperties.vhost() != null &&
-                !messagingProperties.vhost().isEmpty()) {
-            builder.queryParam("amqp.vhost", "vhost:" + messagingProperties.vhost());
+                messagingProperties.virtualHost() != null &&
+                !messagingProperties.virtualHost().isEmpty()) {
+            builder.queryParam("amqp.vhost", "vhost:" + messagingProperties.virtualHost());
         }
         String brokerUrl = builder.build().toUriString();
 
@@ -47,7 +47,7 @@ public class JmsConfiguration {
         }
 
         // RabbitMQ - standard username/password authentication
-        factory.setUsername(messagingProperties.user());
+        factory.setUsername(messagingProperties.username());
         factory.setPassword(messagingProperties.password());
 
         CachingConnectionFactory cachingFactory = new CachingConnectionFactory(factory);
@@ -80,7 +80,7 @@ public class JmsConfiguration {
         } else {
             // SAS (Shared Access Signature) token authentication
             logger.debug("Configuring Azure Service Bus with SAS authentication");
-            factory.setUsername(props.user());
+            factory.setUsername(props.username());
             factory.setPassword(props.password());
         }
     }

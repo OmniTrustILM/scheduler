@@ -25,18 +25,21 @@ spring:
       initialize-schema: never
     job-store-type: jdbc
   messaging:
-    broker-type: ${BROKER_TYPE:SERVICEBUS}
-    broker-url: ${BROKER_URL}
+    broker-type: ${BROKER_TYPE:RABBITMQ}
+    broker-url: ${BROKER_URL:}
+    # Legacy RabbitMQ connection properties (used if broker-url is not set)
+    host: ${BROKER_HOST:}
+    port: ${BROKER_PORT:5672}
     session-cache-size: ${BROKER_SESSION_CACHE_SIZE:10}
-    # Authentication - RabbitMQ requires user/password, ServiceBus requires either user/password (SAS) or AAD
-    user: ${BROKER_USER:}
+    # Authentication - RabbitMQ requires username/password, ServiceBus requires either username/password (SAS) or AAD
+    username: ${BROKER_USERNAME:}
     password: ${BROKER_PASSWORD:}
     # Azure Active Directory (Entra) authentication for ServiceBus
     aad-auth:
       tenant-id: ${AZURE_TENANT_ID:}
       client-id: ${AZURE_CLIENT_ID:}
       client-secret: ${AZURE_CLIENT_SECRET:}
-    vhost: ${BROKER_VHOST:/}
+    virtual-host: ${BROKER_VIRTUAL_HOST:/}
     exchange: ${BROKER_EXCHANGE:czertainly}
     routing-key:
       scheduler: ${BROKER_ROUTING_KEY_SCHEDULER:scheduler}
