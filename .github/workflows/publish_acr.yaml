@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: czertainlytestswcacr.azurecr.io
+  REGISTRY: ilmtestswcacr.azurecr.io
   IMAGE_NAME: czertainly-scheduler
 
 jobs:
