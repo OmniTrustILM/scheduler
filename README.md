@@ -22,9 +22,9 @@
 | `BROKER_URL`                   | URL of Message broker includes protocol and port                   | ![](https://img.shields.io/badge/-YES-success.svg)    | `N/A`         |
 | `BROKER_USER`                  | Username/SAS key name for broker authentication                    | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`     |
 | `BROKER_PASSWORD`              | Password/SAS key for broker authentication                         | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`     |
-| `AZURE_TENANT_ID`              | Azure AD tenant ID for AAD authentication                          | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`     |
-| `AZURE_CLIENT_ID`              | Azure AD application (client) ID                                   | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`     |
-| `AZURE_CLIENT_SECRET`          | Azure AD client secret value                                       | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`     |
+| `BROKER_AZURE_TENANT_ID`       | Azure AD tenant ID for AAD authentication                          | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`     |
+| `BROKER_AZURE_CLIENT_ID`       | Azure AD application (client) ID                                   | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`     |
+| `BROKER_AZURE_CLIENT_SECRET`   | Azure AD client secret value                                       | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`     |
 | `BROKER_VHOST`                 | RabbitMQ vhost (for RabbitMQ use `/` as default)                   | ![](https://img.shields.io/badge/-NO-red.svg)         | `/`           |
 | `BROKER_SESSION_CACHE_SIZE`    | For RabbitMQ - CachingSessionFacotry pool size           | ![](https://img.shields.io/badge/-NO-red.svg)      | `10`          |
 | `BROKER_EXCHANGE`              | Message broker exchange name                                       | ![](https://img.shields.io/badge/-NO-red.svg)         | `czertainly`  |
@@ -39,6 +39,6 @@ The scheduler supports two message brokers with different authentication methods
 
 **Azure Service Bus:**
 - **SAS Authentication:** Use `BROKER_USER` (SAS key name) and `BROKER_PASSWORD` (SAS key)
-- **AAD Authentication:** Use `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, and `AZURE_CLIENT_SECRET`
+- **AAD Authentication:** Use `BROKER_AZURE_TENANT_ID`, `BROKER_AZURE_CLIENT_ID`, and `BROKER_AZURE_CLIENT_SECRET`
 
 > **Note:** For Azure Service Bus, you must provide either SAS credentials or AAD credentials, but not both. When using AAD authentication, ensure you use the client secret **value**, not the secret ID.
