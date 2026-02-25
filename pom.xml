@@ -18,7 +18,7 @@
         <java.version>21</java.version>
         <c3p0.version>0.11.2</c3p0.version>
         <sonar.organization>czertainly</sonar.organization>
-        <mchange-commons-java.version>0.3.2</mchange-commons-java.version>
+        <mchange-commons-java.version>0.4.0</mchange-commons-java.version>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.projectKey>CZERTAINLY_CZERTAINLY-Scheduler</sonar.projectKey>
     </properties>
