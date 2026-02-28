@@ -30,7 +30,12 @@ spring:
     # Legacy RabbitMQ connection properties (used if broker-url is not set)
     host: ${BROKER_HOST:}
     port: ${BROKER_PORT:5672}
-    session-cache-size: ${BROKER_SESSION_CACHE_SIZE:10}
+    pool:
+      max-connections: ${BROKER_POOL_MAX_CONNECTIONS:1}
+      connection-idle-timeout: ${BROKER_POOL_CONNECTION_IDLE_TIMEOUT:30000}
+      connection-check-interval: ${BROKER_POOL_CONNECTION_CHECK_INTERVAL:60000}
+      max-sessions-per-connection: ${BROKER_POOL_MAX_SESSIONS:500}
+      use-anonymous-producers: ${BROKER_POOL_USE_ANONYMOUS_PRODUCERS:true}
     # Authentication - RabbitMQ requires username/password, ServiceBus requires either username/password (SAS) or AAD
     username: ${BROKER_USERNAME:}
     password: ${BROKER_PASSWORD:}

@@ -80,6 +80,12 @@
             <version>1.18.1</version>
         </dependency>
 
+        <!-- JMS connection pooling -->
+        <dependency>
+            <groupId>org.messaginghub</groupId>
+            <artifactId>pooled-jms</artifactId>
+        </dependency>
+
         <!--  Quartz libraries -->
         <dependency>
             <groupId>org.quartz-scheduler</groupId>

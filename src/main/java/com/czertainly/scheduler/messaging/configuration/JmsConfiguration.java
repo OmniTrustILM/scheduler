@@ -6,11 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.jms.ConnectionFactory;
 import org.apache.qpid.jms.JmsConnectionExtensions;
 import org.apache.qpid.jms.JmsConnectionFactory;
+import org.messaginghub.pooled.jms.JmsPoolConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.jms.connection.CachingConnectionFactory;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
 import org.springframework.jms.support.converter.MessageConverter;
@@ -41,8 +41,6 @@ public class JmsConfiguration {
 
         if (messagingProperties.brokerType() == MessagingProperties.BrokerType.SERVICEBUS) {
             configureServiceBusAuthentication(factory, messagingProperties);
-            // no CachingConnectionFactory required for Azure Service Bus
-            // cached connection would be hold opened and Service Bus this idle connection close after 60 seconds
             return factory;
         }
 
@@ -50,9 +48,7 @@ public class JmsConfiguration {
         factory.setUsername(messagingProperties.username());
         factory.setPassword(messagingProperties.password());
 
-        CachingConnectionFactory cachingFactory = new CachingConnectionFactory(factory);
-        cachingFactory.setSessionCacheSize(messagingProperties.sessionCacheSize());
-        return cachingFactory;
+        return factory;
     }
 
     /**
@@ -85,6 +81,38 @@ public class JmsConfiguration {
         }
     }
 
+    @Bean(destroyMethod = "stop")
+    public JmsPoolConnectionFactory producerConnectionFactory(ConnectionFactory connectionFactory,
+                                                               MessagingProperties messagingProperties) {
+        // JmsPoolConnectionFactory manages connection/session lifecycle independently of
+        // Spring's shared-connection mechanism. On connection failure (e.g. amqp:connection:forced),
+        // the pool auto-evicts the dead connection and provides a fresh one on the next borrow —
+        // no manual resetConnection() needed.
+        //
+        // connectionIdleTimeout evicts idle connections before the broker's idle thresholds.
+        // useAnonymousProducers=true keeps a persistent AMQP link on the connection, preventing
+        // the broker's "no active links" forced close.
+        // connectionCheckInterval enables a background thread to actively evict stale connections.
+        MessagingProperties.Pool poolConfig = messagingProperties.pool();
+        if (poolConfig == null) {
+            poolConfig = new MessagingProperties.Pool(null, null, null, null, null);
+        }
+
+        JmsPoolConnectionFactory pool = new JmsPoolConnectionFactory();
+        pool.setConnectionFactory(connectionFactory);
+        pool.setMaxConnections(poolConfig.maxConnections());
+        pool.setConnectionIdleTimeout(poolConfig.connectionIdleTimeout());
+        pool.setConnectionCheckInterval(poolConfig.connectionCheckInterval());
+        pool.setMaxSessionsPerConnection(poolConfig.maxSessionsPerConnection());
+        pool.setUseAnonymousProducers(poolConfig.useAnonymousProducers());
+        pool.start();
+        logger.info("Started JMS producer connection pool: maxConnections={}, connectionIdleTimeout={}ms, connectionCheckInterval={}ms, maxSessionsPerConnection={}, useAnonymousProducers={}",
+                poolConfig.maxConnections(), poolConfig.connectionIdleTimeout(),
+                poolConfig.connectionCheckInterval(), poolConfig.maxSessionsPerConnection(),
+                poolConfig.useAnonymousProducers());
+        return pool;
+    }
+
     @Bean
     public MessageConverter messageConverter(ObjectMapper objectMapper) {
         MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
@@ -94,11 +122,14 @@ public class JmsConfiguration {
     }
 
     @Bean
-    public JmsTemplate jmsTemplate(ConnectionFactory connectionFactory,
-                                   MessageConverter messageConverter) {
-        JmsTemplate template = new JmsTemplate(connectionFactory);
+    public JmsTemplate jmsTemplate(JmsPoolConnectionFactory producerConnectionFactory,
+                                   MessageConverter messageConverter,
+                                   MessagingProperties messagingProperties) {
+        JmsTemplate template = new JmsTemplate(producerConnectionFactory);
         template.setMessageConverter(messageConverter);
-        template.setPubSubDomain(true);
+        if (messagingProperties.brokerType() == MessagingProperties.BrokerType.SERVICEBUS) {
+            template.setPubSubDomain(true);
+        }
         return template;
     }
 }
