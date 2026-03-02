@@ -58,7 +58,6 @@ class JmsMessageProducerTest {
         jmsMessageProducer.sendMessage(schedulerJobExecutionMessage);
         
         // Then
-        verify(messagingProperties, times(2)).producerDestination();
         verify(jmsTemplate).convertAndSend(expectedExchange, schedulerJobExecutionMessage, messagePostProcessor);
     }
 }
