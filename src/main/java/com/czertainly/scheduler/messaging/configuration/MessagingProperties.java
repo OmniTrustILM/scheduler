@@ -74,7 +74,9 @@ public record MessagingProperties(
             return exchange();
         }
 
-        return "/exchanges/" + exchange() + "/" + routingKey().scheduler();
+        String schedulerRoutingKey = (routingKey != null) ? routingKey.scheduler() : "";
+        if (schedulerRoutingKey == null) schedulerRoutingKey = "";
+        return "/exchanges/" + exchange() + "/" + schedulerRoutingKey;
     }
 
     public record RoutingKey(

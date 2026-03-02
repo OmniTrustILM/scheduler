@@ -24,7 +24,8 @@ public class JmsMessageProducer {
     }
 
     public void sendMessage(final SchedulerJobExecutionMessage schedulerExecutionMessage) {
-        logger.info("Sending message to: {}", messagingProperties.producerDestination());
-        jmsTemplate.convertAndSend(messagingProperties.producerDestination(), schedulerExecutionMessage, messagePostProcessor);
+        final String destination = messagingProperties.producerDestination();
+        logger.info("Sending message to: {}", destination);
+        jmsTemplate.convertAndSend(destination, schedulerExecutionMessage, messagePostProcessor);
     }
 }
