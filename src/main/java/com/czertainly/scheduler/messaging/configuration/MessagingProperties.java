@@ -27,6 +27,10 @@ public record MessagingProperties(
      * Validates authentication and connection configuration based on broker type.
      */
     public MessagingProperties {
+        if (brokerType == null) {
+            throw new IllegalArgumentException(
+                    "BROKER_TYPE must be configured (RABBITMQ or SERVICEBUS)");
+        }
         boolean hasUserAndPassword = StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password);
         boolean hasAadAuth = aadAuth != null && aadAuth.isEnabled();
         boolean hasBrokerUrl = StringUtils.isNotBlank(brokerUrl);
@@ -74,8 +78,9 @@ public record MessagingProperties(
             return exchange();
         }
 
-        String schedulerRoutingKey = (routingKey != null) ? routingKey.scheduler() : "";
-        if (schedulerRoutingKey == null) schedulerRoutingKey = "";
+        String schedulerRoutingKey = (routingKey != null)
+                ? StringUtils.trimToEmpty(routingKey.scheduler())
+                : "";
         return "/exchanges/" + exchange() + "/" + schedulerRoutingKey;
     }
 
