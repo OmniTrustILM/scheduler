@@ -10,7 +10,6 @@ import org.messaginghub.pooled.jms.JmsPoolConnectionFactory;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.support.converter.MessageConverter;
-import org.springframework.jms.support.converter.MessageType;
 import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
 
 import static org.junit.jupiter.api.Assertions.*;
