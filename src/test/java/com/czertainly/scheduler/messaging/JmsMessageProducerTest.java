@@ -47,17 +47,4 @@ class JmsMessageProducerTest {
         // Then
         verify(jmsTemplate).convertAndSend(exchangeName, schedulerJobExecutionMessage, messagePostProcessor);
     }
-    
-    @Test
-    void testSendMessage_shouldUsePropertiesExchange() {
-        // Given
-        String expectedExchange = "scheduler.execution";
-        when(messagingProperties.producerDestination()).thenReturn(expectedExchange);
-        
-        // When
-        jmsMessageProducer.sendMessage(schedulerJobExecutionMessage);
-        
-        // Then
-        verify(jmsTemplate).convertAndSend(expectedExchange, schedulerJobExecutionMessage, messagePostProcessor);
-    }
 }

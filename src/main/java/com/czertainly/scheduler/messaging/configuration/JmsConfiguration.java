@@ -29,9 +29,15 @@ public class JmsConfiguration {
         // For RabbitMQ with AMQP 1.0, vhost is specified in the AMQP Open frame hostname field
         // The hostname field must be "vhost:name" format according to RabbitMQ AMQP 1.0 docs
         // We use amqp.vhost connection property to set this value
-        if (messagingProperties.brokerType() == MessagingProperties.BrokerType.RABBITMQ &&
-                messagingProperties.virtualHost() != null &&
-                !messagingProperties.virtualHost().isEmpty()) {
+        boolean urlHasAmqpVhost = builder.build().getQueryParams().containsKey("amqp.vhost");
+        boolean hasConfiguredVhost = messagingProperties.brokerType() == MessagingProperties.BrokerType.RABBITMQ
+                && messagingProperties.virtualHost() != null
+                && !messagingProperties.virtualHost().isEmpty();
+
+        if (hasConfiguredVhost && urlHasAmqpVhost) {
+            logger.warn("BROKER_URL already contains 'amqp.vhost' query parameter; ignoring BROKER_VIRTUAL_HOST={}",
+                    messagingProperties.virtualHost());
+        } else if (hasConfiguredVhost) {
             builder.queryParam("amqp.vhost", "vhost:" + messagingProperties.virtualHost());
         }
         String brokerUrl = builder.build().toUriString();

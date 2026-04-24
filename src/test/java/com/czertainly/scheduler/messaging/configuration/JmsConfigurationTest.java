@@ -9,8 +9,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.messaginghub.pooled.jms.JmsPoolConnectionFactory;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.jms.core.JmsTemplate;
-import org.springframework.jms.support.converter.MessageConverter;
 import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
+import org.springframework.jms.support.converter.MessageConverter;
+import org.springframework.jms.support.converter.MessageType;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -164,7 +166,9 @@ class JmsConfigurationTest {
     void messageConverter_targetTypeIsText() {
         MessageConverter converter = jmsConfiguration.messageConverter(new ObjectMapper());
 
-        assertInstanceOf(MappingJackson2MessageConverter.class, converter);
+        MappingJackson2MessageConverter jacksonConverter =
+                assertInstanceOf(MappingJackson2MessageConverter.class, converter);
+        assertEquals(MessageType.TEXT, ReflectionTestUtils.getField(jacksonConverter, "targetType"));
     }
 
     // --- jmsTemplate ---

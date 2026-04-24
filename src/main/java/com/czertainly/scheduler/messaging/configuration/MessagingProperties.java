@@ -1,6 +1,8 @@
 package com.czertainly.scheduler.messaging.configuration;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.apache.commons.lang3.StringUtils;
@@ -13,7 +15,7 @@ public record MessagingProperties(
         @NotNull MessagingProperties.BrokerType brokerType,
         String brokerUrl,
         String host,
-        Integer port,
+        @Min(1) @Max(65535) Integer port,
         String username,
         String password,
         String virtualHost,
