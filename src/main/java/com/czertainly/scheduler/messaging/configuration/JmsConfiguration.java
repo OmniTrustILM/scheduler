@@ -37,6 +37,7 @@ public class JmsConfiguration {
         String brokerUrl = builder.build().toUriString();
 
         JmsConnectionFactory factory = new JmsConnectionFactory(brokerUrl);
+        // Sync sends so publish failures surface immediately; acceptable for low-volume scheduler messages.
         factory.setForceSyncSend(true);
 
         if (messagingProperties.brokerType() == MessagingProperties.BrokerType.SERVICEBUS) {
