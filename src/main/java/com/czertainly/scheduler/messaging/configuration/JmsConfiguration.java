@@ -4,6 +4,7 @@ import com.azure.core.credential.TokenCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.jms.ConnectionFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.qpid.jms.JmsConnectionExtensions;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.messaginghub.pooled.jms.JmsPoolConnectionFactory;
@@ -31,8 +32,7 @@ public class JmsConfiguration {
         // We use amqp.vhost connection property to set this value
         boolean urlHasAmqpVhost = builder.build().getQueryParams().containsKey("amqp.vhost");
         boolean hasConfiguredVhost = messagingProperties.brokerType() == MessagingProperties.BrokerType.RABBITMQ
-                && messagingProperties.virtualHost() != null
-                && !messagingProperties.virtualHost().isEmpty();
+                && StringUtils.isNotBlank(messagingProperties.virtualHost());
 
         if (hasConfiguredVhost && urlHasAmqpVhost) {
             logger.warn("BROKER_URL already contains 'amqp.vhost' query parameter; ignoring BROKER_VIRTUAL_HOST={}",

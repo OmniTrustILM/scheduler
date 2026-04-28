@@ -44,7 +44,7 @@ spring:
       tenant-id: ${BROKER_AZURE_TENANT_ID:}
       client-id: ${BROKER_AZURE_CLIENT_ID:}
       client-secret: ${BROKER_AZURE_CLIENT_SECRET:}
-    virtual-host: ${BROKER_VIRTUAL_HOST:/}
+    virtual-host: ${BROKER_VIRTUAL_HOST:czertainly}
     exchange: ${BROKER_EXCHANGE:czertainly}
     routing-key:
       scheduler: ${BROKER_ROUTING_KEY_SCHEDULER:scheduler}
