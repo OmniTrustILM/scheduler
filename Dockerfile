@@ -9,7 +9,7 @@ ARG SERVER_PASSWORD
 RUN mvn -f /home/app/pom.xml clean package
 
 # Package stage
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:21.0.11_10-jre-alpine
 
 LABEL org.opencontainers.image.authors="CZERTAINLY <support@czertainly.com>"
 
