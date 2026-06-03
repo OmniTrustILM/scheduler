@@ -2,7 +2,7 @@ name: Publish Docker image
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main* ]
     tags:
       - '*'
   workflow_dispatch:
@@ -23,6 +23,5 @@ jobs:
     with:
       image: ilm/scheduler
       cache-scope: scheduler
-      pre-build: maven
       build-args: |
         VERSION=${{ github.ref_name }}

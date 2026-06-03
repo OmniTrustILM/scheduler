@@ -2,7 +2,7 @@ name: Test Docker image
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ main* ]
   workflow_dispatch:
 
 concurrency:
@@ -20,6 +20,5 @@ jobs:
     with:
       image: ilm/scheduler
       cache-scope: scheduler
-      pre-build: maven
       build-args: |
         VERSION=${{ github.ref_name }}
