@@ -19,7 +19,7 @@ spring:
             dataSource: myDS
             tablePrefix: ${DB_SCHEMA:scheduler}.qrtz_
           scheduler:
-            instanceName: czertainly-scheduler
+            instanceName: ilm-scheduler
             instanceId: AUTO
     jdbc:
       initialize-schema: never
@@ -44,8 +44,8 @@ spring:
       tenant-id: ${BROKER_AZURE_TENANT_ID:}
       client-id: ${BROKER_AZURE_CLIENT_ID:}
       client-secret: ${BROKER_AZURE_CLIENT_SECRET:}
-    virtual-host: ${BROKER_VIRTUAL_HOST:czertainly}
-    exchange: ${BROKER_EXCHANGE:czertainly}
+    virtual-host: ${BROKER_VIRTUAL_HOST:/}
+    exchange: ${BROKER_EXCHANGE:ilm}
     routing-key:
       scheduler: ${BROKER_ROUTING_KEY_SCHEDULER:scheduler}
   jpa:
