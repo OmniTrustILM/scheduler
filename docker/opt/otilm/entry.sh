@@ -1,7 +1,7 @@
 #!/bin/sh
 
 otilmHome="/opt/otilm"
-source ${otilmHome}/static-functions
+. ${otilmHome}/static-functions
 
 log "INFO" "Launching the Scheduler"
 exec java $JAVA_OPTS -jar ./app.jar
