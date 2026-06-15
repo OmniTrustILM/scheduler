@@ -6,6 +6,6 @@
 
     <!--  Initialization version  -->
     <include file="1.0.0/init-changelog.xml" relativeToChangelogFile="true"/>
-
+    <include file="1.0.0/1.1.0/rebrand-changelog.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
