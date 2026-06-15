@@ -65,7 +65,8 @@
                  trigger_group = 'ilm'
              WHERE sched_name = 'czertainly-scheduler';</sql>
         <sql>UPDATE qrtz_blob_triggers
-             SET sched_name = 'ilm-scheduler'
+             SET sched_name = 'ilm-scheduler',
+                 trigger_group = 'ilm'
              WHERE sched_name = 'czertainly-scheduler';</sql>
         <sql>UPDATE qrtz_fired_triggers
              SET sched_name    = 'ilm-scheduler',
