@@ -42,7 +42,7 @@ class SchedulerServiceImplTest {
         schedulerJobDto = new SchedulerJobDto();
         schedulerJobDto.setJobName("testJob");
         schedulerJobDto.setCronExpression("0 0 12 * * ?");
-        schedulerJobDto.setClassNameToBeExecuted("com.czertainly.scheduler.TestJob");
+        schedulerJobDto.setClassNameToBeExecuted("com.otilm.scheduler.TestJob");
 
         schedulerRequestDto = new SchedulerRequestDto();
         schedulerRequestDto.setSchedulerJob(schedulerJobDto);
