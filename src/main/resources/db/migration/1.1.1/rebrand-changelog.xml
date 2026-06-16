@@ -5,35 +5,35 @@
 
     <!-- Drop FKs before renaming sched_name data; each guarded so re-runs on already-migrated DBs are safe -->
 
-    <changeSet author="system" id="2025061501-1" runInTransaction="true">
+    <changeSet author="system" id="2026061501-1" runInTransaction="true">
         <preConditions onFail="MARK_RAN">
             <foreignKeyConstraintExists foreignKeyTableName="qrtz_blob_triggers" foreignKeyName="qrtz_blob_triggers_sched_name_fkey"/>
         </preConditions>
         <dropForeignKeyConstraint baseTableName="qrtz_blob_triggers" constraintName="qrtz_blob_triggers_sched_name_fkey"/>
     </changeSet>
 
-    <changeSet author="system" id="2025061501-2" runInTransaction="true">
+    <changeSet author="system" id="2026061501-2" runInTransaction="true">
         <preConditions onFail="MARK_RAN">
             <foreignKeyConstraintExists foreignKeyTableName="qrtz_cron_triggers" foreignKeyName="qrtz_cron_triggers_sched_name_fkey"/>
         </preConditions>
         <dropForeignKeyConstraint baseTableName="qrtz_cron_triggers" constraintName="qrtz_cron_triggers_sched_name_fkey"/>
     </changeSet>
 
-    <changeSet author="system" id="2025061501-3" runInTransaction="true">
+    <changeSet author="system" id="2026061501-3" runInTransaction="true">
         <preConditions onFail="MARK_RAN">
             <foreignKeyConstraintExists foreignKeyTableName="qrtz_simple_triggers" foreignKeyName="qrtz_simple_triggers_sched_name_fkey"/>
         </preConditions>
         <dropForeignKeyConstraint baseTableName="qrtz_simple_triggers" constraintName="qrtz_simple_triggers_sched_name_fkey"/>
     </changeSet>
 
-    <changeSet author="system" id="2025061501-4" runInTransaction="true">
+    <changeSet author="system" id="2026061501-4" runInTransaction="true">
         <preConditions onFail="MARK_RAN">
             <foreignKeyConstraintExists foreignKeyTableName="qrtz_simprop_triggers" foreignKeyName="qrtz_simprop_triggers_sched_name_fkey"/>
         </preConditions>
         <dropForeignKeyConstraint baseTableName="qrtz_simprop_triggers" constraintName="qrtz_simprop_triggers_sched_name_fkey"/>
     </changeSet>
 
-    <changeSet author="system" id="2025061501-5" runInTransaction="true">
+    <changeSet author="system" id="2026061501-5" runInTransaction="true">
         <preConditions onFail="MARK_RAN">
             <foreignKeyConstraintExists foreignKeyTableName="qrtz_triggers" foreignKeyName="qrtz_triggers_sched_name_fkey"/>
         </preConditions>
@@ -42,7 +42,7 @@
 
     <!-- Rename scheduler identity in all Quartz tables -->
 
-    <changeSet author="system" id="2025061501-6" runInTransaction="true">
+    <changeSet author="system" id="2026061501-6" runInTransaction="true">
         <sql>UPDATE qrtz_calendars
              SET sched_name = 'ilm-scheduler'
              WHERE sched_name = 'czertainly-scheduler';</sql>
@@ -91,7 +91,7 @@
 
     <!-- Re-add FKs; each guarded so they are skipped if already present -->
 
-    <changeSet author="system" id="2025061501-7" runInTransaction="true">
+    <changeSet author="system" id="2026061501-7" runInTransaction="true">
         <preConditions onFail="MARK_RAN">
             <not>
                 <foreignKeyConstraintExists foreignKeyTableName="qrtz_cron_triggers" foreignKeyName="qrtz_cron_triggers_sched_name_fkey"/>
@@ -104,7 +104,7 @@
                                  referencedColumnNames="sched_name,trigger_name,trigger_group"/>
     </changeSet>
 
-    <changeSet author="system" id="2025061501-8" runInTransaction="true">
+    <changeSet author="system" id="2026061501-8" runInTransaction="true">
         <preConditions onFail="MARK_RAN">
             <not>
                 <foreignKeyConstraintExists foreignKeyTableName="qrtz_simple_triggers" foreignKeyName="qrtz_simple_triggers_sched_name_fkey"/>
@@ -117,7 +117,7 @@
                                  referencedColumnNames="sched_name,trigger_name,trigger_group"/>
     </changeSet>
 
-    <changeSet author="system" id="2025061501-9" runInTransaction="true">
+    <changeSet author="system" id="2026061501-9" runInTransaction="true">
         <preConditions onFail="MARK_RAN">
             <not>
                 <foreignKeyConstraintExists foreignKeyTableName="qrtz_simprop_triggers" foreignKeyName="qrtz_simprop_triggers_sched_name_fkey"/>
@@ -130,7 +130,7 @@
                                  referencedColumnNames="sched_name,trigger_name,trigger_group"/>
     </changeSet>
 
-    <changeSet author="system" id="2025061501-10" runInTransaction="true">
+    <changeSet author="system" id="2026061501-10" runInTransaction="true">
         <preConditions onFail="MARK_RAN">
             <not>
                 <foreignKeyConstraintExists foreignKeyTableName="qrtz_blob_triggers" foreignKeyName="qrtz_blob_triggers_sched_name_fkey"/>
@@ -143,7 +143,7 @@
                                  referencedColumnNames="sched_name,trigger_name,trigger_group"/>
     </changeSet>
 
-    <changeSet author="system" id="2025061501-11" runInTransaction="true">
+    <changeSet author="system" id="2026061501-11" runInTransaction="true">
         <preConditions onFail="MARK_RAN">
             <not>
                 <foreignKeyConstraintExists foreignKeyTableName="qrtz_triggers" foreignKeyName="qrtz_triggers_sched_name_fkey"/>
@@ -154,6 +154,10 @@
                                  baseColumnNames="sched_name,job_name,job_group"
                                  referencedTableName="qrtz_job_details"
                                  referencedColumnNames="sched_name,job_name,job_group"/>
+    </changeSet>
+
+    <changeSet author="system" id="2026061501-12">
+        <customChange class="db.migration.RebrandJobDataMigration"/>
     </changeSet>
 
 </databaseChangeLog>
