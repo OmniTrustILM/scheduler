@@ -11,15 +11,15 @@ RUN mvn -f /home/app/pom.xml clean package
 # Package stage
 FROM eclipse-temurin:21-jre-alpine
 
-LABEL org.opencontainers.image.authors="CZERTAINLY <support@czertainly.com>"
+LABEL org.opencontainers.image.authors="ILM <support@otilm.com>"
 
-# add non root user czertainly
-RUN addgroup --system --gid 10001 czertainly && adduser --system --home /opt/czertainly --uid 10001 --ingroup czertainly czertainly
+# add non root user otilm
+RUN addgroup --system --gid 10001 otilm && adduser --system --home /opt/otilm --uid 10001 --ingroup otilm otilm
 
 COPY --from=build /home/app/docker /
-COPY --from=build /home/app/target/*.jar /opt/czertainly/app.jar
+COPY --from=build /home/app/target/*.jar /opt/otilm/app.jar
 
-WORKDIR /opt/czertainly
+WORKDIR /opt/otilm
 
 ENV JDBC_URL=
 ENV JDBC_USERNAME=
@@ -33,11 +33,11 @@ ENV BROKER_PORT=5672
 ENV BROKER_USERNAME=
 ENV BROKER_PASSWORD=
 ENV BROKER_VIRTUAL_HOST=/
-ENV BROKER_EXCHANGE=czertainly
+ENV BROKER_EXCHANGE=ilm
 ENV BROKER_ROUTING_KEY_SCHEDULER=scheduler
 ENV BROKER_TYPE=RABBITMQ
 
 
 USER 10001
 
-ENTRYPOINT ["/opt/czertainly/entry.sh"]
+ENTRYPOINT ["/opt/otilm/entry.sh"]

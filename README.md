@@ -1,6 +1,6 @@
-# CZERTAINLY Scheduler
+# ILM Scheduler
 
-> This repository is part of the commercial open-source project CZERTAINLY. You can find more information about the project at [CZERTAINLY](https://github.com/CZERTAINLY/CZERTAINLY) repository, including the contribution guide.
+> This repository is part of the commercial open-source project ILM. You can find more information about the project at the [ILM](https://github.com/OmniTrustILM/ilm) repository, including the contribution guide.
 
 ## Database requirements
 
@@ -8,7 +8,7 @@
 
 ## Docker container
 
-`Scheduler` is provided as a Docker container. Use the `czertainly/czertainly-scheduler:tagname` to pull the required image from the repository. It can be configured using the following environment variables:
+`Scheduler` is provided as a Docker container. Use the `hub.omnitrustregistry.com/ilm/scheduler:tagname` to pull the required image from the repository. It can be configured using the following environment variables:
 
 | Variable                       | Description                                                        | Required                                              | Default value |
 |--------------------------------|--------------------------------------------------------------------|-------------------------------------------------------|---------------|
@@ -19,21 +19,21 @@
 | `PORT`                         | Port where the service is exposed                                  | ![](https://img.shields.io/badge/-NO-red.svg)         | `8080`        |
 | `JAVA_OPTS`                    | Customize Java system properties for running application           | ![](https://img.shields.io/badge/-NO-red.svg)         | `N/A`         |
 | `BROKER_TYPE`                  | Message broker type (`RABBITMQ` or `SERVICEBUS`)                   | ![](https://img.shields.io/badge/-NO-red.svg)         | `RABBITMQ`    |
-| `BROKER_URL`                   | URL of Message broker including protocol and port (required for `SERVICEBUS`; optional for `RABBITMQ` when using `BROKER_HOST`/`BROKER_PORT`) | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`    |
-| `BROKER_HOST`                  | Hostname of the RabbitMQ broker (used instead of `BROKER_URL`)     | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`     |
+| `BROKER_URL`                   | URL of Message broker including protocol and port (required for `SERVICEBUS`; optional for `RABBITMQ` when using `BROKER_HOST`/`BROKER_PORT`) | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`         |
+| `BROKER_HOST`                  | Hostname of the RabbitMQ broker (used instead of `BROKER_URL`)     | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`         |
 | `BROKER_PORT`                  | Port of the RabbitMQ broker (used with `BROKER_HOST`)              | ![](https://img.shields.io/badge/-NO-red.svg)         | `5672`        |
-| `BROKER_USERNAME`              | Username/SAS key name for broker authentication                    | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`     |
-| `BROKER_PASSWORD`              | Password/SAS key for broker authentication                         | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`     |
-| `BROKER_AZURE_TENANT_ID`       | Azure AD tenant ID for AAD authentication                          | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`     |
-| `BROKER_AZURE_CLIENT_ID`       | Azure AD application (client) ID                                   | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`     |
-| `BROKER_AZURE_CLIENT_SECRET`   | Azure AD client secret value                                       | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`     |
+| `BROKER_USERNAME`              | Username/SAS key name for broker authentication                    | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`         |
+| `BROKER_PASSWORD`              | Password/SAS key for broker authentication                         | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`         |
+| `BROKER_AZURE_TENANT_ID`       | Azure AD tenant ID for AAD authentication                          | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`         |
+| `BROKER_AZURE_CLIENT_ID`       | Azure AD application (client) ID                                   | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`         |
+| `BROKER_AZURE_CLIENT_SECRET`   | Azure AD client secret value                                       | ![](https://img.shields.io/badge/-CONDITIONAL-yellow.svg) | `N/A`         |
 | `BROKER_VIRTUAL_HOST`          | RabbitMQ vhost (for RabbitMQ use `/` as default)                   | ![](https://img.shields.io/badge/-NO-red.svg)         | `/`           |
 | `BROKER_POOL_MAX_CONNECTIONS`  | Connection pool max connections                                    | ![](https://img.shields.io/badge/-NO-red.svg)         | `1`           |
 | `BROKER_POOL_CONNECTION_IDLE_TIMEOUT`   | Connection pool idle timeout (ms)                         | ![](https://img.shields.io/badge/-NO-red.svg)         | `30000`       |
 | `BROKER_POOL_CONNECTION_CHECK_INTERVAL` | Connection pool check interval (ms)                       | ![](https://img.shields.io/badge/-NO-red.svg)         | `60000`       |
 | `BROKER_POOL_MAX_SESSIONS`              | Max sessions per pooled connection                        | ![](https://img.shields.io/badge/-NO-red.svg)         | `500`         |
 | `BROKER_POOL_USE_ANONYMOUS_PRODUCERS`   | Whether the connection pool uses anonymous producers      | ![](https://img.shields.io/badge/-NO-red.svg)         | `true`        |
-| `BROKER_EXCHANGE`              | Message broker exchange name                                       | ![](https://img.shields.io/badge/-NO-red.svg)         | `czertainly`  |
+| `BROKER_EXCHANGE`              | Message broker exchange name                                       | ![](https://img.shields.io/badge/-NO-red.svg)         | `ilm`         |
 | `BROKER_ROUTING_KEY_SCHEDULER` | Routing key for scheduler                                          | ![](https://img.shields.io/badge/-NO-red.svg)         | `scheduler`   |
 
 ### Message Broker Authentication
