@@ -8,8 +8,10 @@ import liquibase.exception.SetupException;
 import liquibase.exception.ValidationErrors;
 import liquibase.resource.ResourceAccessor;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Arrays;
 
 public class RebrandJobDataMigration implements CustomTaskChange {
 
@@ -25,7 +27,7 @@ public class RebrandJobDataMigration implements CustomTaskChange {
                 while (rs.next()) {
                     byte[] jobData = rs.getBytes("job_data");
                     byte[] updated = replaceInSerializedBytes(jobData);
-                    if (updated.length > 0) {
+                    if (!Arrays.equals(updated, jobData)) {
                         try (PreparedStatement ps = conn.prepareStatement(
                                 "UPDATE qrtz_job_details SET job_data = ? WHERE sched_name = ? AND job_name = ? AND job_group = ?")) {
                             ps.setBytes(1, updated);
@@ -42,29 +44,30 @@ public class RebrandJobDataMigration implements CustomTaskChange {
         }
     }
 
-    private byte[] replaceInSerializedBytes(byte[] data) {
-        byte[] oldBytes = "com.czertainly".getBytes();
-        byte[] newBytes = "com.otilm".getBytes();
+    byte[] replaceInSerializedBytes(byte[] data) {
+        byte[] oldBytes = "com.czertainly".getBytes(StandardCharsets.UTF_8);
+        byte[] newBytes = "com.otilm".getBytes(StandardCharsets.UTF_8);
 
-        // Find the old string in the blob
-        int pos = indexOf(data, oldBytes);
-        if (pos < 0) return new byte[0];
+        // Replace all occurrences — a JobDataMap blob can contain the package name
+        // in multiple places (class descriptors and string values).
+        int pos;
+        while ((pos = indexOf(data, oldBytes)) >= 0) {
+            // Java serialization encodes strings with a 2-byte big-endian length
+            // immediately before the string content (TC_STRING 0x74 / TC_CLASSDESC 0x72).
+            int lengthPos = pos - 2;
+            int oldLength = ((data[lengthPos] & 0xFF) << 8) | (data[lengthPos + 1] & 0xFF);
+            int newLength = oldLength - (oldBytes.length - newBytes.length);
 
-        // The 2-byte length prefix is 2 bytes before the string content
-        // (after the TC_STRING opcode 0x74)
-        int lengthPos = pos - 2;
-        int oldLength = ((data[lengthPos] & 0xFF) << 8) | (data[lengthPos + 1] & 0xFF);
-        int newLength = oldLength - (oldBytes.length - newBytes.length);
-
-        // Build new byte array
-        byte[] result = new byte[data.length - (oldBytes.length - newBytes.length)];
-        System.arraycopy(data, 0, result, 0, lengthPos);
-        result[lengthPos] = (byte) ((newLength >> 8) & 0xFF);
-        result[lengthPos + 1] = (byte) (newLength & 0xFF);
-        System.arraycopy(newBytes, 0, result, lengthPos + 2, newBytes.length);
-        System.arraycopy(data, pos + oldBytes.length, result, lengthPos + 2 + newBytes.length,
-                data.length - pos - oldBytes.length);
-        return result;
+            byte[] result = new byte[data.length - (oldBytes.length - newBytes.length)];
+            System.arraycopy(data, 0, result, 0, lengthPos);
+            result[lengthPos] = (byte) ((newLength >> 8) & 0xFF);
+            result[lengthPos + 1] = (byte) (newLength & 0xFF);
+            System.arraycopy(newBytes, 0, result, lengthPos + 2, newBytes.length);
+            System.arraycopy(data, pos + oldBytes.length, result, lengthPos + 2 + newBytes.length,
+                    data.length - pos - oldBytes.length);
+            data = result;
+        }
+        return data;
     }
 
     private int indexOf(byte[] data, byte[] pattern) {
@@ -100,6 +103,6 @@ public class RebrandJobDataMigration implements CustomTaskChange {
     @Override
     public ValidationErrors validate(Database database) {
         // No pre-execution validation needed
-        return null;
+        return new ValidationErrors();
     }
 }
