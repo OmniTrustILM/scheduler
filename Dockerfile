@@ -13,6 +13,9 @@ FROM eclipse-temurin:21-jre-alpine
 
 LABEL org.opencontainers.image.authors="ILM <support@otilm.com>"
 
+# apply outstanding Alpine security updates on top of the base image
+RUN apk --no-cache upgrade
+
 # add non root user otilm
 RUN addgroup --system --gid 10001 otilm && adduser --system --home /opt/otilm --uid 10001 --ingroup otilm otilm
 
