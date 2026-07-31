@@ -1,5 +1,5 @@
 # Build stage
-FROM maven:3.9.14-eclipse-temurin-21 AS build
+FROM maven:3.9.16-eclipse-temurin-21 AS build
 COPY src /home/app/src
 COPY pom.xml /home/app
 COPY settings.xml /root/.m2/settings.xml
@@ -12,6 +12,9 @@ RUN mvn -f /home/app/pom.xml clean package
 FROM eclipse-temurin:21-jre-alpine
 
 LABEL org.opencontainers.image.authors="ILM <support@otilm.com>"
+
+# apply outstanding Alpine security updates on top of the base image
+RUN apk --no-cache upgrade
 
 # add non root user otilm
 RUN addgroup --system --gid 10001 otilm && adduser --system --home /opt/otilm --uid 10001 --ingroup otilm otilm
