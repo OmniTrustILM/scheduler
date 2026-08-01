@@ -5,11 +5,11 @@
     <parent>
         <groupId>com.otilm</groupId>
         <artifactId>dependencies</artifactId>
-        <version>1.4.2-SNAPSHOT</version>
+        <version>1.4.2</version>
     </parent>
 
     <artifactId>scheduler</artifactId>
-    <version>1.1.1-SNAPSHOT</version>
+    <version>1.1.1</version>
     <name>scheduler</name>
 
     <description>scheduler</description>
@@ -31,7 +31,7 @@
         <dependency>
             <groupId>com.otilm</groupId>
             <artifactId>interfaces</artifactId>
-            <version>2.18.1-SNAPSHOT</version>
+            <version>2.19.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.springdoc</groupId>
