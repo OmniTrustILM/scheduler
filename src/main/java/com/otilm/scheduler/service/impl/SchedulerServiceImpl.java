@@ -10,16 +10,21 @@ import com.otilm.api.model.scheduler.SchedulerStatus;
 import com.otilm.scheduler.constants.JobConstants;
 import com.otilm.scheduler.service.SchedulerService;
 import com.otilm.scheduler.utils.SchedulerUtils;
-import org.quartz.*;
+import java.util.ArrayList;
+import java.util.List;
+import org.quartz.CronExpression;
+import org.quartz.CronTrigger;
+import org.quartz.JobDetail;
+import org.quartz.JobKey;
+import org.quartz.Scheduler;
+import org.quartz.Trigger;
+import org.quartz.TriggerKey;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @Transactional
@@ -38,17 +43,19 @@ public class SchedulerServiceImpl implements SchedulerService {
                 return;
             }
 
-            if(!CronExpression.isValidExpression(schedulerDetail.getCronExpression())) {
+            if (!CronExpression.isValidExpression(schedulerDetail.getCronExpression())) {
                 throw new ValidationException(ValidationError.create("Invalid format of CRON expression"));
             }
 
             logger.info("Scheduling new job withe name {}", schedulerDetail.getJobName());
-            final JobDetail jobDetail
-                    = SchedulerUtils.prepareJobDetail(schedulerDetail.getJobName(), schedulerDetail.getClassNameToBeExecuted());
-            final Trigger jobTrigger
-                    = SchedulerUtils.prepareTrigger(schedulerDetail.getJobName(), schedulerDetail.getCronExpression());
+            final JobDetail jobDetail = SchedulerUtils
+                    .prepareJobDetail(schedulerDetail.getJobName(), schedulerDetail.getClassNameToBeExecuted());
+            final Trigger jobTrigger = SchedulerUtils
+                    .prepareTrigger(schedulerDetail.getJobName(), schedulerDetail.getCronExpression());
             scheduler.scheduleJob(jobDetail, jobTrigger);
-            logger.info("Job {} scheduled with by {}", schedulerDetail.getJobName(), schedulerDetail.getCronExpression());
+            logger
+                    .info("Job {} scheduled with by {}", schedulerDetail.getJobName(),
+                            schedulerDetail.getCronExpression());
         } catch (org.quartz.SchedulerException e) {
             logger.error("Unable to schedule job {}", schedulerDetail.getJobName(), e.getMessage());
             throw new SchedulerException(e.getMessage());
@@ -71,7 +78,7 @@ public class SchedulerServiceImpl implements SchedulerService {
             scheduler.deleteJob(new JobKey(jobName, JobConstants.GROUP_NAME));
             logger.info("Job {} was unregistered.", jobName);
         } catch (org.quartz.SchedulerException e) {
-            logger.error("Unable to unregister job {}" , jobName);
+            logger.error("Unable to unregister job {}", jobName);
             throw new SchedulerException(e.getMessage());
         }
     }
@@ -83,9 +90,11 @@ public class SchedulerServiceImpl implements SchedulerService {
         try {
             for (final JobKey jobKey : scheduler.getJobKeys(GroupMatcher.jobGroupEquals(JobConstants.GROUP_NAME))) {
                 final JobDetail jobDetail = scheduler.getJobDetail(jobKey);
-                final CronTrigger trigger = (CronTrigger) scheduler.getTrigger(new TriggerKey(jobKey.getName() + JobConstants.JOB_TRIGGER_SUFFIX));
+                final CronTrigger trigger = (CronTrigger) scheduler
+                        .getTrigger(new TriggerKey(jobKey.getName() + JobConstants.JOB_TRIGGER_SUFFIX));
                 schedulerDetailList
-                        .add(new SchedulerJobDto(jobKey.getName(), trigger.getCronExpression(), jobDetail.getJobDataMap().getString(JobConstants.CLASS_TOBE_EXECUTED)));
+                        .add(new SchedulerJobDto(jobKey.getName(), trigger.getCronExpression(),
+                                jobDetail.getJobDataMap().getString(JobConstants.CLASS_TOBE_EXECUTED)));
             }
         } catch (org.quartz.SchedulerException e) {
             logger.error("Unable to retrieve list of registered jobs.", e.getMessage());
@@ -120,7 +129,6 @@ public class SchedulerServiceImpl implements SchedulerService {
             throw new SchedulerException(e.getMessage());
         }
     }
-
 
     // SETTERs
 

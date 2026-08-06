@@ -7,23 +7,33 @@ import com.otilm.api.model.scheduler.SchedulerRequestDto;
 import com.otilm.api.model.scheduler.SchedulerResponseDto;
 import com.otilm.api.model.scheduler.SchedulerStatus;
 import com.otilm.scheduler.constants.JobConstants;
+import java.util.HashSet;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.quartz.*;
+import org.quartz.JobDetail;
+import org.quartz.JobKey;
+import org.quartz.Scheduler;
+import org.quartz.Trigger;
+import org.quartz.TriggerKey;
 import org.quartz.impl.JobDetailImpl;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.impl.triggers.CronTriggerImpl;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SchedulerServiceImplTest {
@@ -80,7 +90,8 @@ class SchedulerServiceImplTest {
     void createNewJobThrowsSchedulerException() throws Exception {
         when(scheduler.checkExists(any(JobKey.class))).thenReturn(false);
         doThrow(new org.quartz.SchedulerException("Scheduler error"))
-                .when(scheduler).scheduleJob(any(JobDetail.class), any(Trigger.class));
+                .when(scheduler)
+                .scheduleJob(any(JobDetail.class), any(Trigger.class));
 
         assertThrows(SchedulerException.class, () -> schedulerService.createNewJob(schedulerRequestDto));
     }
@@ -115,8 +126,7 @@ class SchedulerServiceImplTest {
 
     @Test
     void updateJobThrowsSchedulerExceptionOnDelete() throws Exception {
-        doThrow(new org.quartz.SchedulerException("Delete error"))
-                .when(scheduler).deleteJob(any(JobKey.class));
+        doThrow(new org.quartz.SchedulerException("Delete error")).when(scheduler).deleteJob(any(JobKey.class));
 
         assertThrows(SchedulerException.class, () -> schedulerService.updateJob(schedulerRequestDto));
     }
@@ -140,8 +150,7 @@ class SchedulerServiceImplTest {
 
     @Test
     void deleteJobThrowsSchedulerException() throws Exception {
-        doThrow(new org.quartz.SchedulerException("Delete error"))
-                .when(scheduler).deleteJob(any(JobKey.class));
+        doThrow(new org.quartz.SchedulerException("Delete error")).when(scheduler).deleteJob(any(JobKey.class));
 
         assertThrows(SchedulerException.class, () -> schedulerService.deleteJob("testJob"));
     }
@@ -196,8 +205,7 @@ class SchedulerServiceImplTest {
 
     @Test
     void listJobsThrowsSchedulerException() throws Exception {
-        when(scheduler.getJobKeys(any(GroupMatcher.class)))
-                .thenThrow(new org.quartz.SchedulerException("List error"));
+        when(scheduler.getJobKeys(any(GroupMatcher.class))).thenThrow(new org.quartz.SchedulerException("List error"));
 
         assertThrows(SchedulerException.class, () -> schedulerService.listJobs());
     }
@@ -227,8 +235,7 @@ class SchedulerServiceImplTest {
 
     @Test
     void enableJobThrowsSchedulerException() throws Exception {
-        doThrow(new org.quartz.SchedulerException("Resume error"))
-                .when(scheduler).resumeJob(any(JobKey.class));
+        doThrow(new org.quartz.SchedulerException("Resume error")).when(scheduler).resumeJob(any(JobKey.class));
 
         assertThrows(SchedulerException.class, () -> schedulerService.enableJob("testJob"));
     }
@@ -242,8 +249,7 @@ class SchedulerServiceImplTest {
 
     @Test
     void disableJobThrowsSchedulerException() throws Exception {
-        doThrow(new org.quartz.SchedulerException("Pause error"))
-                .when(scheduler).pauseJob(any(JobKey.class));
+        doThrow(new org.quartz.SchedulerException("Pause error")).when(scheduler).pauseJob(any(JobKey.class));
 
         assertThrows(SchedulerException.class, () -> schedulerService.disableJob("testJob"));
     }
@@ -274,12 +280,11 @@ class SchedulerServiceImplTest {
     void createNewJobWithDifferentCronExpressions() throws Exception {
         when(scheduler.checkExists(any(JobKey.class))).thenReturn(false);
 
-        String[] validCronExpressions = {
-                "0 0 12 * * ?",           // Every day at noon
-                "0 15 10 * * ?",          // 10:15 AM every day
-                "0 0/5 * * * ?",          // Every 5 minutes
-                "0 0 0 1 1 ?",            // Midnight on January 1st
-                "0 0 22 ? * MON-FRI"      // 10 PM Monday through Friday
+        String[] validCronExpressions = {"0 0 12 * * ?", // Every day at noon
+                "0 15 10 * * ?", // 10:15 AM every day
+                "0 0/5 * * * ?", // Every 5 minutes
+                "0 0 0 1 1 ?", // Midnight on January 1st
+                "0 0 22 ? * MON-FRI" // 10 PM Monday through Friday
         };
 
         for (String cronExpression : validCronExpressions) {
@@ -288,14 +293,12 @@ class SchedulerServiceImplTest {
             schedulerService.createNewJob(schedulerRequestDto);
         }
 
-        verify(scheduler, times(validCronExpressions.length))
-                .scheduleJob(any(JobDetail.class), any(Trigger.class));
+        verify(scheduler, times(validCronExpressions.length)).scheduleJob(any(JobDetail.class), any(Trigger.class));
     }
 
     @Test
     void deleteNonExistentJob() throws Exception {
-        doThrow(new org.quartz.SchedulerException("Job not found"))
-                .when(scheduler).deleteJob(any(JobKey.class));
+        doThrow(new org.quartz.SchedulerException("Job not found")).when(scheduler).deleteJob(any(JobKey.class));
 
         assertThrows(SchedulerException.class, () -> schedulerService.deleteJob("nonExistentJob"));
     }
@@ -314,4 +317,3 @@ class SchedulerServiceImplTest {
         verify(scheduler).pauseJob(new JobKey("testJob", JobConstants.GROUP_NAME));
     }
 }
-

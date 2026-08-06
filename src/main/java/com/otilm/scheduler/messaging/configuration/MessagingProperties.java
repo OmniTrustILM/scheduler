@@ -11,27 +11,16 @@ import org.springframework.validation.annotation.Validated;
 
 @ConfigurationProperties(prefix = "spring.messaging")
 @Validated
-public record MessagingProperties(
-        @NotNull MessagingProperties.BrokerType brokerType,
-        String brokerUrl,
-        String host,
-        @Min(1) @Max(65535) Integer port,
-        String username,
-        String password,
-        String virtualHost,
-        @NotBlank String exchange,
-        RoutingKey routingKey,
-        @Valid AadAuth aadAuth,
-        Pool pool
-) {
+public record MessagingProperties(@NotNull MessagingProperties.BrokerType brokerType, String brokerUrl, String host,
+        @Min(1) @Max(65535) Integer port, String username, String password, String virtualHost,
+        @NotBlank String exchange, RoutingKey routingKey, @Valid AadAuth aadAuth, Pool pool) {
 
     /**
      * Validates authentication and connection configuration based on broker type.
      */
     public MessagingProperties {
         if (brokerType == null) {
-            throw new IllegalArgumentException(
-                    "BROKER_TYPE must be configured (RABBITMQ or SERVICEBUS)");
+            throw new IllegalArgumentException("BROKER_TYPE must be configured (RABBITMQ or SERVICEBUS)");
         }
         boolean hasUserAndPassword = StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password);
         boolean hasAadAuth = aadAuth != null && aadAuth.isEnabled();
@@ -51,21 +40,20 @@ public record MessagingProperties(
             }
             case SERVICEBUS -> {
                 if (!hasBrokerUrl) {
-                    throw new IllegalArgumentException(
-                            "ServiceBus requires BROKER_URL to be configured");
+                    throw new IllegalArgumentException("ServiceBus requires BROKER_URL to be configured");
                 }
                 if (!hasUserAndPassword && !hasAadAuth) {
                     throw new IllegalArgumentException(
-                            "ServiceBus requires either BROKER_USERNAME/BROKER_PASSWORD (SAS) " +
-                            "or BROKER_AZURE_TENANT_ID/BROKER_AZURE_CLIENT_ID/BROKER_AZURE_CLIENT_SECRET (AAD) to be configured");
+                            "ServiceBus requires either BROKER_USERNAME/BROKER_PASSWORD (SAS) "
+                                    + "or BROKER_AZURE_TENANT_ID/BROKER_AZURE_CLIENT_ID/BROKER_AZURE_CLIENT_SECRET (AAD) to be configured");
                 }
             }
         }
     }
 
     /**
-     * Returns the effective broker URL for connection.
-     * Uses brokerUrl if provided, otherwise constructs from host and port (for RabbitMQ legacy support).
+     * Returns the effective broker URL for connection. Uses brokerUrl if provided, otherwise constructs from host and
+     * port (for RabbitMQ legacy support).
      */
     public String getEffectiveBrokerUrl() {
         if (StringUtils.isNotBlank(brokerUrl)) {
@@ -80,56 +68,51 @@ public record MessagingProperties(
             return exchange();
         }
 
-        String schedulerRoutingKey = (routingKey != null)
-                ? StringUtils.trimToEmpty(routingKey.scheduler())
-                : "";
+        String schedulerRoutingKey = (routingKey != null) ? StringUtils.trimToEmpty(routingKey.scheduler()) : "";
         return "/exchanges/" + exchange() + "/" + schedulerRoutingKey;
     }
 
-    public record RoutingKey(
-            String scheduler
-    ) {
+    public record RoutingKey(String scheduler) {
     }
 
-    public record AadAuth(
-            String tenantId,
-            String clientId,
-            String clientSecret
-    ) {
+    public record AadAuth(String tenantId, String clientId, String clientSecret) {
         /**
          * Checks if AAD authentication is enabled by verifying all required fields are present.
          *
          * @return true if all AAD credentials are provided, false otherwise
          */
         public boolean isEnabled() {
-            return StringUtils.isNotBlank(tenantId)
-                    && StringUtils.isNotBlank(clientId)
+            return StringUtils.isNotBlank(tenantId) && StringUtils.isNotBlank(clientId)
                     && StringUtils.isNotBlank(clientSecret);
         }
     }
 
     /**
-     * Connection pool configuration for JmsPoolConnectionFactory.
-     * Used for both ServiceBus and RabbitMQ producer connection factories.
+     * Connection pool configuration for JmsPoolConnectionFactory. Used for both ServiceBus and RabbitMQ producer
+     * connection factories.
      */
-    public record Pool(
-            Integer maxConnections,
-            Integer connectionIdleTimeout,
-            Integer connectionCheckInterval,
-            Integer maxSessionsPerConnection,
-            Boolean useAnonymousProducers
-    ) {
+    public record Pool(Integer maxConnections, Integer connectionIdleTimeout, Integer connectionCheckInterval,
+            Integer maxSessionsPerConnection, Boolean useAnonymousProducers) {
         public Pool {
-            if (maxConnections == null || maxConnections <= 0) maxConnections = 1;
-            if (connectionIdleTimeout == null) connectionIdleTimeout = 30000;
-            if (connectionCheckInterval == null) connectionCheckInterval = 60000;
-            if (maxSessionsPerConnection == null || maxSessionsPerConnection <= 0) maxSessionsPerConnection = 500;
-            if (useAnonymousProducers == null) useAnonymousProducers = true;
+            if (maxConnections == null || maxConnections <= 0) {
+                maxConnections = 1;
+            }
+            if (connectionIdleTimeout == null) {
+                connectionIdleTimeout = 30000;
+            }
+            if (connectionCheckInterval == null) {
+                connectionCheckInterval = 60000;
+            }
+            if (maxSessionsPerConnection == null || maxSessionsPerConnection <= 0) {
+                maxSessionsPerConnection = 500;
+            }
+            if (useAnonymousProducers == null) {
+                useAnonymousProducers = true;
+            }
         }
     }
 
     public enum BrokerType {
-        RABBITMQ,
-        SERVICEBUS
+        RABBITMQ, SERVICEBUS
     }
 }
