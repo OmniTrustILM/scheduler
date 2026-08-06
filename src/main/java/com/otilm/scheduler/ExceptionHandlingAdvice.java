@@ -8,7 +8,6 @@ import com.otilm.api.exception.ValidationError;
 import com.otilm.api.exception.ValidationException;
 import com.otilm.api.model.common.ErrorMessageDto;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -69,7 +68,7 @@ public class ExceptionHandlingAdvice {
     public List<String> handleValidationException(ValidationException ex) {
         LOG.info("HTTP 422: {}", ex.getMessage());
 
-        return ex.getErrors().stream().map(ValidationError::getErrorDescription).collect(Collectors.toList());
+        return ex.getErrors().stream().map(ValidationError::getErrorDescription).toList();
     }
 
     /**
