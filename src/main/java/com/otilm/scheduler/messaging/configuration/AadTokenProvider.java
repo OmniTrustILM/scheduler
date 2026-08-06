@@ -4,20 +4,18 @@ import com.azure.core.credential.AccessToken;
 import com.azure.core.credential.TokenCredential;
 import com.azure.core.credential.TokenRequestContext;
 import jakarta.jms.Connection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.net.URI;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.function.BiFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Token provider for Azure Active Directory (AAD) authentication with Azure Service Bus.
  * <p>
- * This class implements the Qpid JMS PASSWORD_OVERRIDE extension mechanism to provide
- * OAuth2 tokens for AMQP connections. It caches tokens and automatically refreshes them
- * before expiration.
+ * This class implements the Qpid JMS PASSWORD_OVERRIDE extension mechanism to provide OAuth2 tokens for AMQP
+ * connections. It caches tokens and automatically refreshes them before expiration.
  * </p>
  */
 public class AadTokenProvider implements BiFunction<Connection, URI, Object> {
@@ -54,8 +52,7 @@ public class AadTokenProvider implements BiFunction<Connection, URI, Object> {
     }
 
     private boolean isTokenExpired() {
-        return cachedToken == null
-                || tokenExpiry == null
+        return cachedToken == null || tokenExpiry == null
                 || OffsetDateTime.now().plusMinutes(TOKEN_REFRESH_BUFFER_MINUTES).isAfter(tokenExpiry);
     }
 

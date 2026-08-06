@@ -14,7 +14,10 @@ import org.springframework.jms.support.converter.MessageConverter;
 import org.springframework.jms.support.converter.MessageType;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 class JmsConfigurationTest {
@@ -30,12 +33,8 @@ class JmsConfigurationTest {
 
     @Test
     void connectionFactory_rabbitMq_setsUsernameAndPassword() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.RABBITMQ,
-                "amqp://localhost:5672", null, null,
-                "myUser", "myPass", null,
-                "exchange", null, null, null
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.RABBITMQ,
+                "amqp://localhost:5672", null, null, "myUser", "myPass", null, "exchange", null, null, null);
 
         ConnectionFactory factory = jmsConfiguration.connectionFactory(props);
 
@@ -47,12 +46,8 @@ class JmsConfigurationTest {
 
     @Test
     void connectionFactory_rabbitMqWithVhost_addsVhostQueryParam() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.RABBITMQ,
-                "amqp://localhost:5672", null, null,
-                "user", "pass", "myVhost",
-                "exchange", null, null, null
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.RABBITMQ,
+                "amqp://localhost:5672", null, null, "user", "pass", "myVhost", "exchange", null, null, null);
 
         ConnectionFactory factory = jmsConfiguration.connectionFactory(props);
 
@@ -63,12 +58,8 @@ class JmsConfigurationTest {
 
     @Test
     void connectionFactory_rabbitMqWithoutVhost_noQueryParam() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.RABBITMQ,
-                "amqp://localhost:5672", null, null,
-                "user", "pass", null,
-                "exchange", null, null, null
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.RABBITMQ,
+                "amqp://localhost:5672", null, null, "user", "pass", null, "exchange", null, null, null);
 
         ConnectionFactory factory = jmsConfiguration.connectionFactory(props);
 
@@ -80,12 +71,9 @@ class JmsConfigurationTest {
 
     @Test
     void connectionFactory_serviceBusWithSas_setsUsernameAndPassword() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.SERVICEBUS,
-                "amqps://sb.servicebus.windows.net", null, null,
-                "sasKeyName", "sasKey", null,
-                "exchange", null, null, null
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.SERVICEBUS,
+                "amqps://sb.servicebus.windows.net", null, null, "sasKeyName", "sasKey", null, "exchange", null, null,
+                null);
 
         ConnectionFactory factory = jmsConfiguration.connectionFactory(props);
 
@@ -96,14 +84,9 @@ class JmsConfigurationTest {
 
     @Test
     void connectionFactory_serviceBusWithAad_setsJwtUsername() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.SERVICEBUS,
-                "amqps://sb.servicebus.windows.net", null, null,
-                null, null, null,
-                "exchange", null,
-                new MessagingProperties.AadAuth("tenant", "client", "secret"),
-                null
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.SERVICEBUS,
+                "amqps://sb.servicebus.windows.net", null, null, null, null, null, "exchange", null,
+                new MessagingProperties.AadAuth("tenant", "client", "secret"), null);
 
         ConnectionFactory factory = jmsConfiguration.connectionFactory(props);
 
@@ -115,13 +98,9 @@ class JmsConfigurationTest {
 
     @Test
     void producerConnectionFactory_appliesPoolConfig() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.RABBITMQ,
-                "amqp://localhost:5672", null, null,
-                "user", "pass", null,
-                "exchange", null, null,
-                new MessagingProperties.Pool(3, 15000, 30000, 200, false)
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.RABBITMQ,
+                "amqp://localhost:5672", null, null, "user", "pass", null, "exchange", null, null,
+                new MessagingProperties.Pool(3, 15000, 30000, 200, false));
         ConnectionFactory innerFactory = jmsConfiguration.connectionFactory(props);
 
         JmsPoolConnectionFactory pool = jmsConfiguration.producerConnectionFactory(innerFactory, props);
@@ -139,12 +118,8 @@ class JmsConfigurationTest {
 
     @Test
     void producerConnectionFactory_nullPoolConfig_usesDefaults() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.RABBITMQ,
-                "amqp://localhost:5672", null, null,
-                "user", "pass", null,
-                "exchange", null, null, null
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.RABBITMQ,
+                "amqp://localhost:5672", null, null, "user", "pass", null, "exchange", null, null, null);
         ConnectionFactory innerFactory = jmsConfiguration.connectionFactory(props);
 
         JmsPoolConnectionFactory pool = jmsConfiguration.producerConnectionFactory(innerFactory, props);
@@ -166,8 +141,8 @@ class JmsConfigurationTest {
     void messageConverter_targetTypeIsText() {
         MessageConverter converter = jmsConfiguration.messageConverter(new ObjectMapper());
 
-        MappingJackson2MessageConverter jacksonConverter =
-                assertInstanceOf(MappingJackson2MessageConverter.class, converter);
+        MappingJackson2MessageConverter jacksonConverter = assertInstanceOf(MappingJackson2MessageConverter.class,
+                converter);
         assertEquals(MessageType.TEXT, ReflectionTestUtils.getField(jacksonConverter, "targetType"));
     }
 
@@ -175,12 +150,8 @@ class JmsConfigurationTest {
 
     @Test
     void jmsTemplate_serviceBus_pubSubDomainTrue() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.SERVICEBUS,
-                "amqps://sb.servicebus.windows.net", null, null,
-                "user", "pass", null,
-                "exchange", null, null, null
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.SERVICEBUS,
+                "amqps://sb.servicebus.windows.net", null, null, "user", "pass", null, "exchange", null, null, null);
         ConnectionFactory innerFactory = jmsConfiguration.connectionFactory(props);
         JmsPoolConnectionFactory pool = jmsConfiguration.producerConnectionFactory(innerFactory, props);
         MessageConverter converter = jmsConfiguration.messageConverter(new ObjectMapper());
@@ -195,12 +166,8 @@ class JmsConfigurationTest {
 
     @Test
     void jmsTemplate_rabbitMq_pubSubDomainFalse() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.RABBITMQ,
-                "amqp://localhost:5672", null, null,
-                "user", "pass", null,
-                "exchange", null, null, null
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.RABBITMQ,
+                "amqp://localhost:5672", null, null, "user", "pass", null, "exchange", null, null, null);
         ConnectionFactory innerFactory = jmsConfiguration.connectionFactory(props);
         JmsPoolConnectionFactory pool = jmsConfiguration.producerConnectionFactory(innerFactory, props);
         MessageConverter converter = jmsConfiguration.messageConverter(new ObjectMapper());

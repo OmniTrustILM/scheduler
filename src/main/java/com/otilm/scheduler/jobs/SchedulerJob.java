@@ -27,8 +27,12 @@ public class SchedulerJob implements Job {
         final String jobName = jobExecutionContext.getJobDetail().getKey().getName();
         logger.info("SchedulerJob {} was fired.", jobName);
 
-        final String jobClassName = jobExecutionContext.getJobDetail().getJobDataMap().getString(JobConstants.CLASS_TOBE_EXECUTED);
-        final SchedulerJobExecutionMessage schedulerExecutionMessage = new SchedulerJobExecutionMessage(jobName, jobClassName);
+        final String jobClassName = jobExecutionContext
+                .getJobDetail()
+                .getJobDataMap()
+                .getString(JobConstants.CLASS_TOBE_EXECUTED);
+        final SchedulerJobExecutionMessage schedulerExecutionMessage = new SchedulerJobExecutionMessage(jobName,
+                jobClassName);
         messageProducer.sendMessage(schedulerExecutionMessage);
     }
 }

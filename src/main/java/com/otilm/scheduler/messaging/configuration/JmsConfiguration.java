@@ -35,8 +35,9 @@ public class JmsConfiguration {
                 && StringUtils.isNotBlank(messagingProperties.virtualHost());
 
         if (hasConfiguredVhost && urlHasAmqpVhost) {
-            logger.warn("BROKER_URL already contains 'amqp.vhost' query parameter; ignoring BROKER_VIRTUAL_HOST={}",
-                    messagingProperties.virtualHost());
+            logger
+                    .warn("BROKER_URL already contains 'amqp.vhost' query parameter; ignoring BROKER_VIRTUAL_HOST={}",
+                            messagingProperties.virtualHost());
         } else if (hasConfiguredVhost) {
             builder.queryParam("amqp.vhost", "vhost:" + messagingProperties.virtualHost());
         }
@@ -59,8 +60,8 @@ public class JmsConfiguration {
     }
 
     /**
-     * Configures authentication for Azure Service Bus.
-     * Supports both AAD (Azure Active Directory) and SAS (Shared Access Signature) authentication.
+     * Configures authentication for Azure Service Bus. Supports both AAD (Azure Active Directory) and SAS (Shared
+     * Access Signature) authentication.
      */
     private void configureServiceBusAuthentication(JmsConnectionFactory factory, MessagingProperties props) {
         if (props.aadAuth() != null && props.aadAuth().isEnabled()) {
@@ -76,10 +77,7 @@ public class JmsConfiguration {
 
             // Special username for OAuth2 token authentication
             factory.setUsername("$jwt");
-            factory.setExtension(
-                    JmsConnectionExtensions.PASSWORD_OVERRIDE.toString(),
-                    tokenProvider
-            );
+            factory.setExtension(JmsConnectionExtensions.PASSWORD_OVERRIDE.toString(), tokenProvider);
         } else {
             // SAS (Shared Access Signature) token authentication
             logger.debug("Configuring Azure Service Bus with SAS authentication");
@@ -90,7 +88,7 @@ public class JmsConfiguration {
 
     @Bean(destroyMethod = "stop")
     public JmsPoolConnectionFactory producerConnectionFactory(ConnectionFactory connectionFactory,
-                                                               MessagingProperties messagingProperties) {
+            MessagingProperties messagingProperties) {
         // JmsPoolConnectionFactory manages connection/session lifecycle independently of
         // Spring's shared-connection mechanism. On connection failure (e.g. amqp:connection:forced),
         // the pool auto-evicts the dead connection and provides a fresh one on the next borrow —
@@ -113,10 +111,11 @@ public class JmsConfiguration {
         pool.setMaxSessionsPerConnection(poolConfig.maxSessionsPerConnection());
         pool.setUseAnonymousProducers(poolConfig.useAnonymousProducers());
         pool.start();
-        logger.info("Started JMS producer connection pool: maxConnections={}, connectionIdleTimeout={}ms, connectionCheckInterval={}ms, maxSessionsPerConnection={}, useAnonymousProducers={}",
-                poolConfig.maxConnections(), poolConfig.connectionIdleTimeout(),
-                poolConfig.connectionCheckInterval(), poolConfig.maxSessionsPerConnection(),
-                poolConfig.useAnonymousProducers());
+        logger
+                .info("Started JMS producer connection pool: maxConnections={}, connectionIdleTimeout={}ms, connectionCheckInterval={}ms, maxSessionsPerConnection={}, useAnonymousProducers={}",
+                        poolConfig.maxConnections(), poolConfig.connectionIdleTimeout(),
+                        poolConfig.connectionCheckInterval(), poolConfig.maxSessionsPerConnection(),
+                        poolConfig.useAnonymousProducers());
         return pool;
     }
 
@@ -130,8 +129,7 @@ public class JmsConfiguration {
 
     @Bean
     public JmsTemplate jmsTemplate(JmsPoolConnectionFactory producerConnectionFactory,
-                                   MessageConverter messageConverter,
-                                   MessagingProperties messagingProperties) {
+            MessageConverter messageConverter, MessagingProperties messagingProperties) {
         JmsTemplate template = new JmsTemplate(producerConnectionFactory);
         template.setMessageConverter(messageConverter);
         if (messagingProperties.brokerType() == MessagingProperties.BrokerType.SERVICEBUS) {

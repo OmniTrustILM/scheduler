@@ -1,5 +1,9 @@
 package db.migration;
 
+import java.nio.charset.StandardCharsets;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Arrays;
 import liquibase.change.custom.CustomTaskChange;
 import liquibase.database.Database;
 import liquibase.database.jvm.JdbcConnection;
@@ -7,11 +11,6 @@ import liquibase.exception.CustomChangeException;
 import liquibase.exception.SetupException;
 import liquibase.exception.ValidationErrors;
 import liquibase.resource.ResourceAccessor;
-
-import java.nio.charset.StandardCharsets;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.Arrays;
 
 public class RebrandJobDataMigration implements CustomTaskChange {
 
@@ -21,15 +20,17 @@ public class RebrandJobDataMigration implements CustomTaskChange {
             JdbcConnection conn = (JdbcConnection) database.getConnection();
 
             try (var stmt = conn.createStatement();
-                 ResultSet rs = stmt.executeQuery(
-                         "SELECT sched_name, job_name, job_group, job_data FROM qrtz_job_details WHERE job_data IS NOT NULL")) {
+                    ResultSet rs = stmt
+                            .executeQuery(
+                                    "SELECT sched_name, job_name, job_group, job_data FROM qrtz_job_details WHERE job_data IS NOT NULL")) {
 
                 while (rs.next()) {
                     byte[] jobData = rs.getBytes("job_data");
                     byte[] updated = replaceInSerializedBytes(jobData);
                     if (!Arrays.equals(updated, jobData)) {
-                        try (PreparedStatement ps = conn.prepareStatement(
-                                "UPDATE qrtz_job_details SET job_data = ? WHERE sched_name = ? AND job_name = ? AND job_group = ?")) {
+                        try (PreparedStatement ps = conn
+                                .prepareStatement(
+                                        "UPDATE qrtz_job_details SET job_data = ? WHERE sched_name = ? AND job_name = ? AND job_group = ?")) {
                             ps.setBytes(1, updated);
                             ps.setString(2, rs.getString("sched_name"));
                             ps.setString(3, rs.getString("job_name"));
@@ -63,8 +64,9 @@ public class RebrandJobDataMigration implements CustomTaskChange {
             result[lengthPos] = (byte) ((newLength >> 8) & 0xFF);
             result[lengthPos + 1] = (byte) (newLength & 0xFF);
             System.arraycopy(newBytes, 0, result, lengthPos + 2, newBytes.length);
-            System.arraycopy(data, pos + oldBytes.length, result, lengthPos + 2 + newBytes.length,
-                    data.length - pos - oldBytes.length);
+            System
+                    .arraycopy(data, pos + oldBytes.length, result, lengthPos + 2 + newBytes.length,
+                            data.length - pos - oldBytes.length);
             data = result;
         }
         return data;
@@ -72,14 +74,18 @@ public class RebrandJobDataMigration implements CustomTaskChange {
 
     private int indexOf(byte[] data, byte[] pattern) {
         for (int i = 0; i <= data.length - pattern.length; i++) {
-            if (matches(data, i, pattern)) return i;
+            if (matches(data, i, pattern)) {
+                return i;
+            }
         }
         return -1;
     }
 
     private boolean matches(byte[] data, int offset, byte[] pattern) {
         for (int j = 0; j < pattern.length; j++) {
-            if (data[offset + j] != pattern[j]) return false;
+            if (data[offset + j] != pattern[j]) {
+                return false;
+            }
         }
         return true;
     }

@@ -1,5 +1,9 @@
 package com.otilm.scheduler.config;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import javax.sql.DataSource;
 import liquibase.change.DatabaseChange;
 import liquibase.integration.spring.SpringLiquibase;
 import org.slf4j.Logger;
@@ -18,15 +22,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-
 @Configuration
-@ConditionalOnClass({ SpringLiquibase.class, DatabaseChange.class })
+@ConditionalOnClass({SpringLiquibase.class, DatabaseChange.class})
 @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", matchIfMissing = true)
-@AutoConfigureAfter({ DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class })
+@AutoConfigureAfter({DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
 @Import({SchemaInit.SpringLiquibaseDependsOnPostProcessor.class})
 public class SchemaInit {
 
@@ -47,8 +46,7 @@ public class SchemaInit {
 
         @Override
         public void afterPropertiesSet() {
-            try (Connection conn = dataSource.getConnection();
-                 Statement statement = conn.createStatement()) {
+            try (Connection conn = dataSource.getConnection(); Statement statement = conn.createStatement()) {
                 logger.info("Going to create DB schema '{}' if not exists.", schemaName);
                 statement.execute("create schema if not exists " + schemaName);
             } catch (SQLException e) {
@@ -56,7 +54,6 @@ public class SchemaInit {
             }
         }
     }
-
 
     @ConditionalOnBean(SchemaInitBean.class)
     static class SpringLiquibaseDependsOnPostProcessor extends AbstractDependsOnBeanFactoryPostProcessor {

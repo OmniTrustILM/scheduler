@@ -1,0 +1,7 @@
+# Commits skipped by `git blame`, so lines are attributed to their real authors.
+#
+# GitHub's blame view honours this file on its own. Locally, the parent POM points
+# `blame.ignoreRevsFile` here on the first Maven build of a clone.
+
+# Apply Spotless formatting, brace and wildcard-import cleanup
+f4d75a9114c9dafc83d1e0214ca6e484f06c41da

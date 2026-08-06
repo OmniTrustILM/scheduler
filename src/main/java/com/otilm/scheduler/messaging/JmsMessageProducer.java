@@ -17,7 +17,8 @@ public class JmsMessageProducer {
     private final MessagePostProcessor messagePostProcessor;
     private final MessagingProperties messagingProperties;
 
-    public JmsMessageProducer(JmsTemplate jmsTemplate, MessagePostProcessor messagePostProcessor, MessagingProperties messagingProperties) {
+    public JmsMessageProducer(JmsTemplate jmsTemplate, MessagePostProcessor messagePostProcessor,
+            MessagingProperties messagingProperties) {
         this.jmsTemplate = jmsTemplate;
         this.messagePostProcessor = messagePostProcessor;
         this.messagingProperties = messagingProperties;

@@ -2,7 +2,11 @@ package com.otilm.scheduler.messaging.configuration;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MessagingPropertiesTest {
 
@@ -10,113 +14,78 @@ class MessagingPropertiesTest {
 
     @Test
     void rabbitMq_validWithBrokerUrl() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.RABBITMQ,
-                "amqp://localhost:5672", null, null,
-                "user", "pass", null,
-                "exchange", null, null, null
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.RABBITMQ,
+                "amqp://localhost:5672", null, null, "user", "pass", null, "exchange", null, null, null);
         assertNotNull(props);
     }
 
     @Test
     void rabbitMq_validWithHostAndPort() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.RABBITMQ,
-                null, "localhost", 5672,
-                "user", "pass", null,
-                "exchange", null, null, null
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.RABBITMQ, null, "localhost",
+                5672, "user", "pass", null, "exchange", null, null, null);
         assertNotNull(props);
     }
 
     @Test
     void rabbitMq_invalidWithoutBrokerUrlOrHostPort() {
-        assertThrows(IllegalArgumentException.class, () -> new MessagingProperties(
-                MessagingProperties.BrokerType.RABBITMQ,
-                null, null, null,
-                "user", "pass", null,
-                "exchange", null, null, null
-        ));
+        assertThrows(IllegalArgumentException.class,
+                () -> new MessagingProperties(MessagingProperties.BrokerType.RABBITMQ, null, null, null, "user", "pass",
+                        null, "exchange", null, null, null));
     }
 
     @Test
     void rabbitMq_invalidWithoutUsernamePassword() {
-        assertThrows(IllegalArgumentException.class, () -> new MessagingProperties(
-                MessagingProperties.BrokerType.RABBITMQ,
-                "amqp://localhost:5672", null, null,
-                null, null, null,
-                "exchange", null, null, null
-        ));
+        assertThrows(IllegalArgumentException.class,
+                () -> new MessagingProperties(MessagingProperties.BrokerType.RABBITMQ, "amqp://localhost:5672", null,
+                        null, null, null, null, "exchange", null, null, null));
     }
 
     // --- ServiceBus validation ---
 
     @Test
     void serviceBus_validWithSasAuth() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.SERVICEBUS,
-                "amqps://sb.servicebus.windows.net", null, null,
-                "sasKeyName", "sasKey", null,
-                "exchange", null, null, null
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.SERVICEBUS,
+                "amqps://sb.servicebus.windows.net", null, null, "sasKeyName", "sasKey", null, "exchange", null, null,
+                null);
         assertNotNull(props);
     }
 
     @Test
     void serviceBus_validWithAadAuth() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.SERVICEBUS,
-                "amqps://sb.servicebus.windows.net", null, null,
-                null, null, null,
-                "exchange", null,
-                new MessagingProperties.AadAuth("tenant", "client", "secret"),
-                null
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.SERVICEBUS,
+                "amqps://sb.servicebus.windows.net", null, null, null, null, null, "exchange", null,
+                new MessagingProperties.AadAuth("tenant", "client", "secret"), null);
         assertNotNull(props);
     }
 
     @Test
     void serviceBus_invalidWithoutBrokerUrl() {
-        assertThrows(IllegalArgumentException.class, () -> new MessagingProperties(
-                MessagingProperties.BrokerType.SERVICEBUS,
-                null, null, null,
-                "user", "pass", null,
-                "exchange", null, null, null
-        ));
+        assertThrows(IllegalArgumentException.class,
+                () -> new MessagingProperties(MessagingProperties.BrokerType.SERVICEBUS, null, null, null, "user",
+                        "pass", null, "exchange", null, null, null));
     }
 
     @Test
     void serviceBus_invalidWithoutAnyAuth() {
-        assertThrows(IllegalArgumentException.class, () -> new MessagingProperties(
-                MessagingProperties.BrokerType.SERVICEBUS,
-                "amqps://sb.servicebus.windows.net", null, null,
-                null, null, null,
-                "exchange", null, null, null
-        ));
+        assertThrows(IllegalArgumentException.class,
+                () -> new MessagingProperties(MessagingProperties.BrokerType.SERVICEBUS,
+                        "amqps://sb.servicebus.windows.net", null, null, null, null, null, "exchange", null, null,
+                        null));
     }
 
     // --- getEffectiveBrokerUrl ---
 
     @Test
     void getEffectiveBrokerUrl_returnsBrokerUrlWhenSet() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.RABBITMQ,
-                "amqp://myhost:9999", null, null,
-                "user", "pass", null,
-                "exchange", null, null, null
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.RABBITMQ,
+                "amqp://myhost:9999", null, null, "user", "pass", null, "exchange", null, null, null);
         assertEquals("amqp://myhost:9999", props.getEffectiveBrokerUrl());
     }
 
     @Test
     void getEffectiveBrokerUrl_constructsFromHostAndPort() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.RABBITMQ,
-                null, "myhost", 5672,
-                "user", "pass", null,
-                "exchange", null, null, null
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.RABBITMQ, null, "myhost",
+                5672, "user", "pass", null, "exchange", null, null, null);
         assertEquals("amqp://myhost:5672", props.getEffectiveBrokerUrl());
     }
 
@@ -124,49 +93,31 @@ class MessagingPropertiesTest {
 
     @Test
     void producerDestination_serviceBus_returnsExchange() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.SERVICEBUS,
-                "amqps://sb.servicebus.windows.net", null, null,
-                "user", "pass", null,
-                "myExchange", null, null, null
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.SERVICEBUS,
+                "amqps://sb.servicebus.windows.net", null, null, "user", "pass", null, "myExchange", null, null, null);
         assertEquals("myExchange", props.producerDestination());
     }
 
     @Test
     void producerDestination_rabbitMq_returnsExchangePath() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.RABBITMQ,
-                "amqp://localhost:5672", null, null,
-                "user", "pass", null,
-                "myExchange",
-                new MessagingProperties.RoutingKey("myKey"),
-                null, null
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.RABBITMQ,
+                "amqp://localhost:5672", null, null, "user", "pass", null, "myExchange",
+                new MessagingProperties.RoutingKey("myKey"), null, null);
         assertEquals("/exchanges/myExchange/myKey", props.producerDestination());
     }
 
     @Test
     void producerDestination_rabbitMq_nullRoutingKey_returnsExchangePathWithEmptyKey() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.RABBITMQ,
-                "amqp://localhost:5672", null, null,
-                "user", "pass", null,
-                "myExchange", null, null, null
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.RABBITMQ,
+                "amqp://localhost:5672", null, null, "user", "pass", null, "myExchange", null, null, null);
         assertEquals("/exchanges/myExchange/", props.producerDestination());
     }
 
     @Test
     void producerDestination_rabbitMq_nullSchedulerKey_returnsExchangePathWithEmptyKey() {
-        MessagingProperties props = new MessagingProperties(
-                MessagingProperties.BrokerType.RABBITMQ,
-                "amqp://localhost:5672", null, null,
-                "user", "pass", null,
-                "myExchange",
-                new MessagingProperties.RoutingKey(null),
-                null, null
-        );
+        MessagingProperties props = new MessagingProperties(MessagingProperties.BrokerType.RABBITMQ,
+                "amqp://localhost:5672", null, null, "user", "pass", null, "myExchange",
+                new MessagingProperties.RoutingKey(null), null, null);
         assertEquals("/exchanges/myExchange/", props.producerDestination());
     }
 
