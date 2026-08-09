@@ -58,7 +58,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                             schedulerDetail.getCronExpression());
         } catch (org.quartz.SchedulerException e) {
             logger.error("Unable to schedule job {}", schedulerDetail.getJobName(), e);
-            throw new SchedulerException(e.getMessage());
+            throw new SchedulerException(e.getMessage(), e);
         }
     }
 
@@ -79,7 +79,7 @@ public class SchedulerServiceImpl implements SchedulerService {
             logger.info("Job {} was unregistered.", jobName);
         } catch (org.quartz.SchedulerException e) {
             logger.error("Unable to unregister job {}", jobName, e);
-            throw new SchedulerException(e.getMessage());
+            throw new SchedulerException(e.getMessage(), e);
         }
     }
 
@@ -98,7 +98,7 @@ public class SchedulerServiceImpl implements SchedulerService {
             }
         } catch (org.quartz.SchedulerException e) {
             logger.error("Unable to retrieve list of registered jobs.", e);
-            throw new SchedulerException(e.getMessage());
+            throw new SchedulerException(e.getMessage(), e);
         }
 
         final SchedulerResponseDto schedulerResponseDto = new SchedulerResponseDto(SchedulerStatus.OK);
@@ -114,7 +114,7 @@ public class SchedulerServiceImpl implements SchedulerService {
             logger.info("Job {} was resumed.", jobName);
         } catch (org.quartz.SchedulerException e) {
             logger.error("Unable to resume job {}", jobName, e);
-            throw new SchedulerException(e.getMessage());
+            throw new SchedulerException(e.getMessage(), e);
         }
     }
 
@@ -126,7 +126,7 @@ public class SchedulerServiceImpl implements SchedulerService {
             logger.info("Job {} was paused.", jobName);
         } catch (org.quartz.SchedulerException e) {
             logger.error("Unable to pause job {}", jobName, e);
-            throw new SchedulerException(e.getMessage());
+            throw new SchedulerException(e.getMessage(), e);
         }
     }
 
