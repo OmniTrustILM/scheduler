@@ -1,5 +1,10 @@
 package com.otilm.scheduler.service.impl;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.IThrowableProxy;
+import ch.qos.logback.core.read.ListAppender;
 import com.otilm.api.exception.SchedulerException;
 import com.otilm.api.exception.ValidationException;
 import com.otilm.api.model.scheduler.SchedulerJobDto;
@@ -8,7 +13,9 @@ import com.otilm.api.model.scheduler.SchedulerResponseDto;
 import com.otilm.api.model.scheduler.SchedulerStatus;
 import com.otilm.scheduler.constants.JobConstants;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,9 +30,11 @@ import org.quartz.TriggerKey;
 import org.quartz.impl.JobDetailImpl;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.impl.triggers.CronTriggerImpl;
+import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -38,6 +47,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class SchedulerServiceImplTest {
 
+    private static final String CAUSE_MUST_BE_RETAINED = "the rethrown exception must retain the Quartz exception as its cause";
+
     @Mock
     private Scheduler scheduler;
 
@@ -46,6 +57,9 @@ class SchedulerServiceImplTest {
 
     private SchedulerRequestDto schedulerRequestDto;
     private SchedulerJobDto schedulerJobDto;
+
+    private Logger serviceLogger;
+    private ListAppender<ILoggingEvent> logAppender;
 
     @BeforeEach
     void setUp() {
@@ -56,6 +70,17 @@ class SchedulerServiceImplTest {
 
         schedulerRequestDto = new SchedulerRequestDto();
         schedulerRequestDto.setSchedulerJob(schedulerJobDto);
+
+        serviceLogger = (Logger) LoggerFactory.getLogger(SchedulerServiceImpl.class);
+        logAppender = new ListAppender<>();
+        logAppender.start();
+        serviceLogger.addAppender(logAppender);
+    }
+
+    @AfterEach
+    void detachLogAppender() {
+        serviceLogger.detachAppender(logAppender);
+        logAppender.stop();
     }
 
     @Test
@@ -315,5 +340,83 @@ class SchedulerServiceImplTest {
         schedulerService.disableJob("testJob");
 
         verify(scheduler).pauseJob(new JobKey("testJob", JobConstants.GROUP_NAME));
+    }
+
+    @Test
+    void createNewJobLogsTheCaughtException() throws Exception {
+        final Throwable cause = new org.quartz.SchedulerException("Scheduler error");
+        when(scheduler.checkExists(any(JobKey.class))).thenReturn(false);
+        doThrow(cause).when(scheduler).scheduleJob(any(JobDetail.class), any(Trigger.class));
+
+        final SchedulerException thrown = assertThrows(SchedulerException.class,
+                () -> schedulerService.createNewJob(schedulerRequestDto));
+
+        assertErrorLoggedWith(cause);
+        assertSame(cause, thrown.getCause(), CAUSE_MUST_BE_RETAINED);
+    }
+
+    @Test
+    void deleteJobLogsTheCaughtException() throws Exception {
+        final Throwable cause = new org.quartz.SchedulerException("Delete error");
+        doThrow(cause).when(scheduler).deleteJob(any(JobKey.class));
+
+        final SchedulerException thrown = assertThrows(SchedulerException.class,
+                () -> schedulerService.deleteJob("testJob"));
+
+        assertErrorLoggedWith(cause);
+        assertSame(cause, thrown.getCause(), CAUSE_MUST_BE_RETAINED);
+    }
+
+    @Test
+    void listJobsLogsTheCaughtException() throws Exception {
+        final Throwable cause = new org.quartz.SchedulerException("List error");
+        when(scheduler.getJobKeys(any())).thenThrow(cause);
+
+        final SchedulerException thrown = assertThrows(SchedulerException.class, () -> schedulerService.listJobs());
+
+        assertErrorLoggedWith(cause);
+        assertSame(cause, thrown.getCause(), CAUSE_MUST_BE_RETAINED);
+    }
+
+    @Test
+    void enableJobLogsTheCaughtException() throws Exception {
+        final Throwable cause = new org.quartz.SchedulerException("Resume error");
+        doThrow(cause).when(scheduler).resumeJob(any(JobKey.class));
+
+        final SchedulerException thrown = assertThrows(SchedulerException.class,
+                () -> schedulerService.enableJob("testJob"));
+
+        assertErrorLoggedWith(cause);
+        assertSame(cause, thrown.getCause(), CAUSE_MUST_BE_RETAINED);
+    }
+
+    @Test
+    void disableJobLogsTheCaughtException() throws Exception {
+        final Throwable cause = new org.quartz.SchedulerException("Pause error");
+        doThrow(cause).when(scheduler).pauseJob(any(JobKey.class));
+
+        final SchedulerException thrown = assertThrows(SchedulerException.class,
+                () -> schedulerService.disableJob("testJob"));
+
+        assertErrorLoggedWith(cause);
+        assertSame(cause, thrown.getCause(), CAUSE_MUST_BE_RETAINED);
+    }
+
+    /**
+     * Asserts that exactly one ERROR event was recorded and that it carries {@code expected} as its throwable.
+     *
+     * @param expected Exception the service was expected to hand to the logger.
+     */
+    private void assertErrorLoggedWith(Throwable expected) {
+        final List<ILoggingEvent> errors = logAppender.list
+                .stream()
+                .filter(event -> event.getLevel() == Level.ERROR)
+                .toList();
+        assertEquals(1, errors.size(), "expected exactly one ERROR event");
+
+        final IThrowableProxy thrown = errors.get(0).getThrowableProxy();
+        assertNotNull(thrown, "the caught exception must be passed to the logger, not its message");
+        assertEquals(expected.getClass().getName(), thrown.getClassName());
+        assertEquals(expected.getMessage(), thrown.getMessage());
     }
 }

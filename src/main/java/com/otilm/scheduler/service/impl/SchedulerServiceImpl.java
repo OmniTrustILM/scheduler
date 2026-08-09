@@ -47,18 +47,18 @@ public class SchedulerServiceImpl implements SchedulerService {
                 throw new ValidationException(ValidationError.create("Invalid format of CRON expression"));
             }
 
-            logger.info("Scheduling new job withe name {}", schedulerDetail.getJobName());
+            logger.info("Scheduling new job with name {}", schedulerDetail.getJobName());
             final JobDetail jobDetail = SchedulerUtils
                     .prepareJobDetail(schedulerDetail.getJobName(), schedulerDetail.getClassNameToBeExecuted());
             final Trigger jobTrigger = SchedulerUtils
                     .prepareTrigger(schedulerDetail.getJobName(), schedulerDetail.getCronExpression());
             scheduler.scheduleJob(jobDetail, jobTrigger);
             logger
-                    .info("Job {} scheduled with by {}", schedulerDetail.getJobName(),
+                    .info("Job {} scheduled with CRON expression {}", schedulerDetail.getJobName(),
                             schedulerDetail.getCronExpression());
         } catch (org.quartz.SchedulerException e) {
-            logger.error("Unable to schedule job {}", schedulerDetail.getJobName(), e.getMessage());
-            throw new SchedulerException(e.getMessage());
+            logger.error("Unable to schedule job {}", schedulerDetail.getJobName(), e);
+            throw new SchedulerException(e.getMessage(), e);
         }
     }
 
@@ -78,8 +78,8 @@ public class SchedulerServiceImpl implements SchedulerService {
             scheduler.deleteJob(new JobKey(jobName, JobConstants.GROUP_NAME));
             logger.info("Job {} was unregistered.", jobName);
         } catch (org.quartz.SchedulerException e) {
-            logger.error("Unable to unregister job {}", jobName);
-            throw new SchedulerException(e.getMessage());
+            logger.error("Unable to unregister job {}", jobName, e);
+            throw new SchedulerException(e.getMessage(), e);
         }
     }
 
@@ -97,8 +97,8 @@ public class SchedulerServiceImpl implements SchedulerService {
                                 jobDetail.getJobDataMap().getString(JobConstants.CLASS_TOBE_EXECUTED)));
             }
         } catch (org.quartz.SchedulerException e) {
-            logger.error("Unable to retrieve list of registered jobs.", e.getMessage());
-            throw new SchedulerException(e.getMessage());
+            logger.error("Unable to retrieve list of registered jobs.", e);
+            throw new SchedulerException(e.getMessage(), e);
         }
 
         final SchedulerResponseDto schedulerResponseDto = new SchedulerResponseDto(SchedulerStatus.OK);
@@ -113,8 +113,8 @@ public class SchedulerServiceImpl implements SchedulerService {
             scheduler.resumeJob(new JobKey(jobName, JobConstants.GROUP_NAME));
             logger.info("Job {} was resumed.", jobName);
         } catch (org.quartz.SchedulerException e) {
-            logger.error("Unable to resume job {}", jobName, e.getMessage());
-            throw new SchedulerException(e.getMessage());
+            logger.error("Unable to resume job {}", jobName, e);
+            throw new SchedulerException(e.getMessage(), e);
         }
     }
 
@@ -125,8 +125,8 @@ public class SchedulerServiceImpl implements SchedulerService {
             scheduler.pauseJob(new JobKey(jobName, JobConstants.GROUP_NAME));
             logger.info("Job {} was paused.", jobName);
         } catch (org.quartz.SchedulerException e) {
-            logger.error("Unable to pause job {}", jobName, e.getMessage());
-            throw new SchedulerException(e.getMessage());
+            logger.error("Unable to pause job {}", jobName, e);
+            throw new SchedulerException(e.getMessage(), e);
         }
     }
 
