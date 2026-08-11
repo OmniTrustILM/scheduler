@@ -5,3 +5,6 @@
 
 # Apply Spotless formatting, brace and wildcard-import cleanup
 f4d75a9114c9dafc83d1e0214ca6e484f06c41da
+
+# Break enum constants one per line
+93f5cbf5560fd7f1fb8491cba3005ffdfb73f4b3
