@@ -113,6 +113,7 @@ public record MessagingProperties(@NotNull MessagingProperties.BrokerType broker
     }
 
     public enum BrokerType {
-        RABBITMQ, SERVICEBUS
+        RABBITMQ,
+        SERVICEBUS
     }
 }
