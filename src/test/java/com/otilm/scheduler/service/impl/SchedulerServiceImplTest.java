@@ -305,7 +305,8 @@ class SchedulerServiceImplTest {
     void createNewJobWithDifferentCronExpressions() throws Exception {
         when(scheduler.checkExists(any(JobKey.class))).thenReturn(false);
 
-        String[] validCronExpressions = {"0 0 12 * * ?", // Every day at noon
+        String[] validCronExpressions = {
+                "0 0 12 * * ?", // Every day at noon
                 "0 15 10 * * ?", // 10:15 AM every day
                 "0 0/5 * * * ?", // Every 5 minutes
                 "0 0 0 1 1 ?", // Midnight on January 1st
