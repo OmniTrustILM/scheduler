@@ -180,15 +180,15 @@ class SchedulerServiceImplTest {
     void theTriggerKeyNamesTheTriggerPrepareTriggerCreates() {
         Trigger prepared = SchedulerUtils.prepareTrigger("testJob", "0 0 12 * * ?");
 
+        assertEquals(new TriggerKey("testJob_trigger", "ilm"), prepared.getKey());
         assertEquals(prepared.getKey(), SchedulerUtils.triggerKey("testJob"));
-        assertEquals(JobConstants.GROUP_NAME, SchedulerUtils.triggerKey("testJob").getGroup());
     }
 
     @Test
     void deleteJobSuccessfully() throws Exception {
         schedulerService.deleteJob("testJob");
 
-        verify(scheduler).unscheduleJob(SchedulerUtils.triggerKey("testJob"));
+        verify(scheduler).unscheduleJob(new TriggerKey("testJob_trigger", "ilm"));
         verify(scheduler).deleteJob(new JobKey("testJob", JobConstants.GROUP_NAME));
     }
 
