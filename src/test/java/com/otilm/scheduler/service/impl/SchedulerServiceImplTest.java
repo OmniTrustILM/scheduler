@@ -12,6 +12,7 @@ import com.otilm.api.model.scheduler.SchedulerRequestDto;
 import com.otilm.api.model.scheduler.SchedulerResponseDto;
 import com.otilm.api.model.scheduler.SchedulerStatus;
 import com.otilm.scheduler.constants.JobConstants;
+import com.otilm.scheduler.utils.SchedulerUtils;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -165,11 +166,23 @@ class SchedulerServiceImplTest {
         verify(scheduler).deleteJob(any(JobKey.class));
     }
 
+    /**
+     * The trigger lives in the job's group, where prepareTrigger put it; an ungrouped key names a trigger that never
+     * existed.
+     */
+    @Test
+    void theTriggerKeyNamesTheTriggerPrepareTriggerCreates() {
+        Trigger prepared = SchedulerUtils.prepareTrigger("testJob", "0 0 12 * * ?");
+
+        assertEquals(prepared.getKey(), SchedulerUtils.triggerKey("testJob"));
+        assertEquals(JobConstants.GROUP_NAME, SchedulerUtils.triggerKey("testJob").getGroup());
+    }
+
     @Test
     void deleteJobSuccessfully() throws Exception {
         schedulerService.deleteJob("testJob");
 
-        verify(scheduler).unscheduleJob(new TriggerKey("testJob" + JobConstants.JOB_TRIGGER_SUFFIX));
+        verify(scheduler).unscheduleJob(SchedulerUtils.triggerKey("testJob"));
         verify(scheduler).deleteJob(new JobKey("testJob", JobConstants.GROUP_NAME));
     }
 
@@ -196,17 +209,17 @@ class SchedulerServiceImplTest {
 
         CronTriggerImpl trigger1 = new CronTriggerImpl();
         trigger1.setCronExpression("0 0 12 * * ?");
-        trigger1.setKey(new TriggerKey("job1" + JobConstants.JOB_TRIGGER_SUFFIX));
+        trigger1.setKey(SchedulerUtils.triggerKey("job1"));
 
         CronTriggerImpl trigger2 = new CronTriggerImpl();
         trigger2.setCronExpression("0 0 18 * * ?");
-        trigger2.setKey(new TriggerKey("job2" + JobConstants.JOB_TRIGGER_SUFFIX));
+        trigger2.setKey(SchedulerUtils.triggerKey("job2"));
 
         when(scheduler.getJobKeys(any(GroupMatcher.class))).thenReturn(jobKeys);
         when(scheduler.getJobDetail(new JobKey("job1", JobConstants.GROUP_NAME))).thenReturn(jobDetail1);
         when(scheduler.getJobDetail(new JobKey("job2", JobConstants.GROUP_NAME))).thenReturn(jobDetail2);
-        when(scheduler.getTrigger(new TriggerKey("job1" + JobConstants.JOB_TRIGGER_SUFFIX))).thenReturn(trigger1);
-        when(scheduler.getTrigger(new TriggerKey("job2" + JobConstants.JOB_TRIGGER_SUFFIX))).thenReturn(trigger2);
+        when(scheduler.getTrigger(SchedulerUtils.triggerKey("job1"))).thenReturn(trigger1);
+        when(scheduler.getTrigger(SchedulerUtils.triggerKey("job2"))).thenReturn(trigger2);
 
         SchedulerResponseDto response = schedulerService.listJobs();
 

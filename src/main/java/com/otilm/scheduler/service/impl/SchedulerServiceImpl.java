@@ -18,7 +18,6 @@ import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.Trigger;
-import org.quartz.TriggerKey;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +73,7 @@ public class SchedulerServiceImpl implements SchedulerService {
     public void deleteJob(String jobName) throws SchedulerException {
         logger.info("Delete/Unregister job with name {}", jobName);
         try {
-            scheduler.unscheduleJob(new TriggerKey(jobName + JobConstants.JOB_TRIGGER_SUFFIX));
+            scheduler.unscheduleJob(SchedulerUtils.triggerKey(jobName));
             scheduler.deleteJob(new JobKey(jobName, JobConstants.GROUP_NAME));
             logger.info("Job {} was unregistered.", jobName);
         } catch (org.quartz.SchedulerException e) {
@@ -91,7 +90,7 @@ public class SchedulerServiceImpl implements SchedulerService {
             for (final JobKey jobKey : scheduler.getJobKeys(GroupMatcher.jobGroupEquals(JobConstants.GROUP_NAME))) {
                 final JobDetail jobDetail = scheduler.getJobDetail(jobKey);
                 final CronTrigger trigger = (CronTrigger) scheduler
-                        .getTrigger(new TriggerKey(jobKey.getName() + JobConstants.JOB_TRIGGER_SUFFIX));
+                        .getTrigger(SchedulerUtils.triggerKey(jobKey.getName()));
                 schedulerDetailList
                         .add(new SchedulerJobDto(jobKey.getName(), trigger.getCronExpression(),
                                 jobDetail.getJobDataMap().getString(JobConstants.CLASS_TOBE_EXECUTED)));
