@@ -45,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -268,7 +269,7 @@ class SchedulerServiceImplTest {
         trigger.setPreviousFireTime(previous);
         trigger.setNextFireTime(next);
         when(scheduler.getJobKeys(any(GroupMatcher.class))).thenReturn(Set.of(jobKey));
-        when(scheduler.getJobDetail(jobKey)).thenReturn(jobDetailFor(jobKey));
+        when(scheduler.getJobDetail(jobKey)).thenReturn(jobDetailFor(jobKey, "com.test.Job1"));
         when(scheduler.getTrigger(triggerKey)).thenReturn(trigger);
         when(scheduler.getTriggerState(triggerKey)).thenReturn(Trigger.TriggerState.PAUSED);
 
@@ -282,14 +283,20 @@ class SchedulerServiceImplTest {
         assertEquals(next.toInstant(), job.getNextFireTime());
     }
 
-    /** A job without a trigger is a fact to report, not a fault: it is exactly the case core needs to see. */
+    /**
+     * A job without a trigger is a fact to report, not a fault: it is exactly the case core needs to see. Its state is
+     * not asked for: a first createNewJob landing between the two reads would answer NORMAL, and core would then show a
+     * scheduled job with no next fire time.
+     */
     @Test
-    void listJobsReportsAJobWithoutATriggerAsNone() throws Exception {
+    void listJobsReportsAJobWithoutATriggerAsNoneWithoutReadingItsState() throws Exception {
         JobKey jobKey = new JobKey("job1", JobConstants.GROUP_NAME);
         when(scheduler.getJobKeys(any(GroupMatcher.class))).thenReturn(Set.of(jobKey));
-        when(scheduler.getJobDetail(jobKey)).thenReturn(jobDetailFor(jobKey));
+        when(scheduler.getJobDetail(jobKey)).thenReturn(jobDetailFor(jobKey, "com.test.Job1"));
         when(scheduler.getTrigger(SchedulerUtils.triggerKey("job1"))).thenReturn(null);
-        when(scheduler.getTriggerState(SchedulerUtils.triggerKey("job1"))).thenReturn(Trigger.TriggerState.NONE);
+        lenient()
+                .when(scheduler.getTriggerState(SchedulerUtils.triggerKey("job1")))
+                .thenReturn(Trigger.TriggerState.NORMAL);
 
         SchedulerJobDto job = schedulerService.listJobs().getSchedulerJobList().get(0);
 
@@ -297,29 +304,36 @@ class SchedulerServiceImplTest {
         assertNull(job.getCronExpression());
         assertNull(job.getNextFireTime());
         assertNull(job.getPreviousFireTime());
+        verify(scheduler, never()).getTriggerState(any(TriggerKey.class));
     }
 
     @Test
     void listJobsReportsATriggerThatIsNotACronTriggerWithoutAnExpression() throws Exception {
         JobKey jobKey = new JobKey("job1", JobConstants.GROUP_NAME);
         TriggerKey triggerKey = SchedulerUtils.triggerKey("job1");
+        Date previous = Date.from(Instant.parse("2026-09-29T10:00:00Z"));
         Date next = Date.from(Instant.parse("2026-09-29T12:00:00Z"));
         SimpleTriggerImpl trigger = new SimpleTriggerImpl();
         trigger.setKey(triggerKey);
+        trigger.setPreviousFireTime(previous);
         trigger.setNextFireTime(next);
         when(scheduler.getJobKeys(any(GroupMatcher.class))).thenReturn(Set.of(jobKey));
-        when(scheduler.getJobDetail(jobKey)).thenReturn(jobDetailFor(jobKey));
+        when(scheduler.getJobDetail(jobKey)).thenReturn(jobDetailFor(jobKey, "com.test.Job1"));
         when(scheduler.getTrigger(triggerKey)).thenReturn(trigger);
         when(scheduler.getTriggerState(triggerKey)).thenReturn(Trigger.TriggerState.NORMAL);
 
         SchedulerJobDto job = schedulerService.listJobs().getSchedulerJobList().get(0);
 
         assertNull(job.getCronExpression());
+        assertEquals(previous.toInstant(), job.getPreviousFireTime());
         assertEquals(next.toInstant(), job.getNextFireTime());
         assertEquals(SchedulerTriggerState.NORMAL, job.getTriggerState());
     }
 
-    /** A job another node deletes between the key listing and its read is left out, not reported half-read. */
+    /**
+     * A job a concurrent request or node deletes between the key listing and its read is left out, not reported
+     * half-read.
+     */
     @Test
     void listJobsLeavesOutAJobDeletedWhileBeingListed() throws Exception {
         JobKey jobKey = new JobKey("job1", JobConstants.GROUP_NAME);
@@ -491,10 +505,10 @@ class SchedulerServiceImplTest {
         assertSame(cause, thrown.getCause(), CAUSE_MUST_BE_RETAINED);
     }
 
-    private static JobDetailImpl jobDetailFor(JobKey jobKey) {
+    private static JobDetailImpl jobDetailFor(JobKey jobKey, String className) {
         JobDetailImpl jobDetail = new JobDetailImpl();
         jobDetail.setKey(jobKey);
-        jobDetail.getJobDataMap().put(JobConstants.CLASS_TOBE_EXECUTED, "com.test.Job1");
+        jobDetail.getJobDataMap().put(JobConstants.CLASS_TOBE_EXECUTED, className);
         return jobDetail;
     }
 

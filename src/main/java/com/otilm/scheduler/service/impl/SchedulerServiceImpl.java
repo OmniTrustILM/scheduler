@@ -7,6 +7,7 @@ import com.otilm.api.model.scheduler.SchedulerJobDto;
 import com.otilm.api.model.scheduler.SchedulerRequestDto;
 import com.otilm.api.model.scheduler.SchedulerResponseDto;
 import com.otilm.api.model.scheduler.SchedulerStatus;
+import com.otilm.api.model.scheduler.SchedulerTriggerState;
 import com.otilm.scheduler.constants.JobConstants;
 import com.otilm.scheduler.service.SchedulerService;
 import com.otilm.scheduler.utils.SchedulerUtils;
@@ -91,7 +92,9 @@ public class SchedulerServiceImpl implements SchedulerService {
             for (final JobKey jobKey : scheduler.getJobKeys(GroupMatcher.jobGroupEquals(JobConstants.GROUP_NAME))) {
                 final JobDetail jobDetail = scheduler.getJobDetail(jobKey);
                 if (jobDetail == null) {
-                    // Deleted by another node between the key listing and this read.
+                    // Deleted by a concurrent request or node after the key listing. Only this window is guarded: a
+                    // trigger gone by the time describe reads it reports NONE, but a read Quartz itself fails (a delete
+                    // and a re-create inside getTrigger's own reads) still fails this listing; the next one is right.
                     continue;
                 }
                 schedulerDetailList.add(describe(jobKey, jobDetail));
@@ -108,8 +111,9 @@ public class SchedulerServiceImpl implements SchedulerService {
 
     /**
      * What Quartz holds for one job: the trigger, looked up in the group prepareTrigger created it in, and that
-     * trigger's state -- NONE when the job has no trigger, which is a fact to report rather than a fault. Only a cron
-     * trigger has an expression to report; the fire times are any trigger's.
+     * trigger's state -- NONE when the job has no trigger, which is a fact to report rather than a fault. The state is
+     * read only for a trigger this read found, so a trigger created after it cannot lend its state to a job reported
+     * without fire times. Only a cron trigger has an expression to report; the fire times are any trigger's.
      */
     private SchedulerJobDto describe(final JobKey jobKey, final JobDetail jobDetail)
             throws org.quartz.SchedulerException {
@@ -120,11 +124,13 @@ public class SchedulerServiceImpl implements SchedulerService {
                 : null;
         final String className = jobDetail.getJobDataMap().getString(JobConstants.CLASS_TOBE_EXECUTED);
         final SchedulerJobDto job = new SchedulerJobDto(jobKey.getName(), cronExpression, className);
-        job.setTriggerState(SchedulerUtils.triggerStateOf(scheduler.getTriggerState(triggerKey)));
-        if (trigger != null) {
-            job.setNextFireTime(SchedulerUtils.toInstant(trigger.getNextFireTime()));
-            job.setPreviousFireTime(SchedulerUtils.toInstant(trigger.getPreviousFireTime()));
+        if (trigger == null) {
+            job.setTriggerState(SchedulerTriggerState.NONE);
+            return job;
         }
+        job.setTriggerState(SchedulerUtils.triggerStateOf(scheduler.getTriggerState(triggerKey)));
+        job.setNextFireTime(SchedulerUtils.toInstant(trigger.getNextFireTime()));
+        job.setPreviousFireTime(SchedulerUtils.toInstant(trigger.getPreviousFireTime()));
         return job;
     }
 
