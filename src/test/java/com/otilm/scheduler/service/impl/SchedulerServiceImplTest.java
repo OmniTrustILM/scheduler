@@ -346,6 +346,17 @@ class SchedulerServiceImplTest {
         assertTrue(response.getSchedulerJobList().isEmpty());
     }
 
+    /** Core lists on every list page and detail view, so a listing must not write an INFO line each time. */
+    @Test
+    void listJobsLogsNothingAtInfo() throws Exception {
+        when(scheduler.getJobKeys(any(GroupMatcher.class))).thenReturn(Set.of());
+
+        schedulerService.listJobs();
+
+        assertTrue(logAppender.list.stream().noneMatch(event -> event.getLevel().isGreaterOrEqual(Level.INFO)),
+                "a listing must log below INFO");
+    }
+
     @Test
     void everyQuartzTriggerStateHasAWireValue() {
         for (Trigger.TriggerState state : Trigger.TriggerState.values()) {

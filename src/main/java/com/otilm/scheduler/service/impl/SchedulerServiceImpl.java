@@ -86,7 +86,7 @@ public class SchedulerServiceImpl implements SchedulerService {
 
     @Override
     public SchedulerResponseDto listJobs() throws SchedulerException {
-        logger.info("Retrieve list of registered jobs.");
+        logger.debug("Retrieve list of registered jobs.");
         final List<SchedulerJobDto> schedulerDetailList = new ArrayList<>();
         try {
             for (final JobKey jobKey : scheduler.getJobKeys(GroupMatcher.jobGroupEquals(JobConstants.GROUP_NAME))) {
