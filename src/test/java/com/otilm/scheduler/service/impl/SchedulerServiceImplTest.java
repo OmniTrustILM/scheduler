@@ -11,8 +11,11 @@ import com.otilm.api.model.scheduler.SchedulerJobDto;
 import com.otilm.api.model.scheduler.SchedulerRequestDto;
 import com.otilm.api.model.scheduler.SchedulerResponseDto;
 import com.otilm.api.model.scheduler.SchedulerStatus;
+import com.otilm.api.model.scheduler.SchedulerTriggerState;
 import com.otilm.scheduler.constants.JobConstants;
 import com.otilm.scheduler.utils.SchedulerUtils;
+import java.time.Instant;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -31,10 +34,12 @@ import org.quartz.TriggerKey;
 import org.quartz.impl.JobDetailImpl;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.impl.triggers.CronTriggerImpl;
+import org.quartz.impl.triggers.SimpleTriggerImpl;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -195,16 +200,15 @@ class SchedulerServiceImplTest {
 
     @Test
     void listJobsSuccessfully() throws Exception {
-        Set<JobKey> jobKeys = new HashSet<>();
-        jobKeys.add(new JobKey("job1", JobConstants.GROUP_NAME));
-        jobKeys.add(new JobKey("job2", JobConstants.GROUP_NAME));
+        JobKey key1 = new JobKey("job1", JobConstants.GROUP_NAME);
+        JobKey key2 = new JobKey("job2", JobConstants.GROUP_NAME);
 
         JobDetailImpl jobDetail1 = new JobDetailImpl();
-        jobDetail1.setKey(new JobKey("job1", JobConstants.GROUP_NAME));
+        jobDetail1.setKey(key1);
         jobDetail1.getJobDataMap().put(JobConstants.CLASS_TOBE_EXECUTED, "com.test.Job1");
 
         JobDetailImpl jobDetail2 = new JobDetailImpl();
-        jobDetail2.setKey(new JobKey("job2", JobConstants.GROUP_NAME));
+        jobDetail2.setKey(key2);
         jobDetail2.getJobDataMap().put(JobConstants.CLASS_TOBE_EXECUTED, "com.test.Job2");
 
         CronTriggerImpl trigger1 = new CronTriggerImpl();
@@ -215,18 +219,22 @@ class SchedulerServiceImplTest {
         trigger2.setCronExpression("0 0 18 * * ?");
         trigger2.setKey(SchedulerUtils.triggerKey("job2"));
 
-        when(scheduler.getJobKeys(any(GroupMatcher.class))).thenReturn(jobKeys);
-        when(scheduler.getJobDetail(new JobKey("job1", JobConstants.GROUP_NAME))).thenReturn(jobDetail1);
-        when(scheduler.getJobDetail(new JobKey("job2", JobConstants.GROUP_NAME))).thenReturn(jobDetail2);
+        when(scheduler.getJobKeys(any(GroupMatcher.class))).thenReturn(Set.of(key1, key2));
+        when(scheduler.getJobDetail(key1)).thenReturn(jobDetail1);
+        when(scheduler.getJobDetail(key2)).thenReturn(jobDetail2);
         when(scheduler.getTrigger(SchedulerUtils.triggerKey("job1"))).thenReturn(trigger1);
         when(scheduler.getTrigger(SchedulerUtils.triggerKey("job2"))).thenReturn(trigger2);
+        when(scheduler.getTriggerState(any(TriggerKey.class))).thenReturn(Trigger.TriggerState.NORMAL);
 
         SchedulerResponseDto response = schedulerService.listJobs();
 
         assertNotNull(response);
         assertEquals(SchedulerStatus.OK, response.getSchedulerStatus());
-        assertNotNull(response.getSchedulerJobList());
         assertEquals(2, response.getSchedulerJobList().size());
+        assertTrue(response
+                .getSchedulerJobList()
+                .stream()
+                .allMatch(job -> job.getTriggerState() == SchedulerTriggerState.NORMAL));
     }
 
     @Test
@@ -249,19 +257,86 @@ class SchedulerServiceImplTest {
     }
 
     @Test
-    void listJobsWithMissingTrigger() throws Exception {
-        Set<JobKey> jobKeys = new HashSet<>();
-        jobKeys.add(new JobKey("job1", JobConstants.GROUP_NAME));
+    void listJobsReportsEachTriggersObservedFacts() throws Exception {
+        JobKey jobKey = new JobKey("job1", JobConstants.GROUP_NAME);
+        TriggerKey triggerKey = SchedulerUtils.triggerKey("job1");
+        Date previous = Date.from(Instant.parse("2026-09-29T10:00:00Z"));
+        Date next = Date.from(Instant.parse("2026-09-29T12:00:00Z"));
+        CronTriggerImpl trigger = new CronTriggerImpl();
+        trigger.setCronExpression("0 0 12 * * ?");
+        trigger.setKey(triggerKey);
+        trigger.setPreviousFireTime(previous);
+        trigger.setNextFireTime(next);
+        when(scheduler.getJobKeys(any(GroupMatcher.class))).thenReturn(Set.of(jobKey));
+        when(scheduler.getJobDetail(jobKey)).thenReturn(jobDetailFor(jobKey));
+        when(scheduler.getTrigger(triggerKey)).thenReturn(trigger);
+        when(scheduler.getTriggerState(triggerKey)).thenReturn(Trigger.TriggerState.PAUSED);
 
-        JobDetailImpl jobDetail = new JobDetailImpl();
-        jobDetail.setKey(new JobKey("job1", JobConstants.GROUP_NAME));
-        jobDetail.getJobDataMap().put(JobConstants.CLASS_TOBE_EXECUTED, "com.test.Job1");
+        SchedulerJobDto job = schedulerService.listJobs().getSchedulerJobList().get(0);
 
-        when(scheduler.getJobKeys(any(GroupMatcher.class))).thenReturn(jobKeys);
-        when(scheduler.getJobDetail(any(JobKey.class))).thenReturn(jobDetail);
-        when(scheduler.getTrigger(any(TriggerKey.class))).thenReturn(null);
+        assertEquals("job1", job.getJobName());
+        assertEquals("0 0 12 * * ?", job.getCronExpression());
+        assertEquals("com.test.Job1", job.getClassNameToBeExecuted());
+        assertEquals(SchedulerTriggerState.PAUSED, job.getTriggerState());
+        assertEquals(previous.toInstant(), job.getPreviousFireTime());
+        assertEquals(next.toInstant(), job.getNextFireTime());
+    }
 
-        assertThrows(NullPointerException.class, () -> schedulerService.listJobs());
+    /** A job without a trigger is a fact to report, not a fault: it is exactly the case core needs to see. */
+    @Test
+    void listJobsReportsAJobWithoutATriggerAsNone() throws Exception {
+        JobKey jobKey = new JobKey("job1", JobConstants.GROUP_NAME);
+        when(scheduler.getJobKeys(any(GroupMatcher.class))).thenReturn(Set.of(jobKey));
+        when(scheduler.getJobDetail(jobKey)).thenReturn(jobDetailFor(jobKey));
+        when(scheduler.getTrigger(SchedulerUtils.triggerKey("job1"))).thenReturn(null);
+        when(scheduler.getTriggerState(SchedulerUtils.triggerKey("job1"))).thenReturn(Trigger.TriggerState.NONE);
+
+        SchedulerJobDto job = schedulerService.listJobs().getSchedulerJobList().get(0);
+
+        assertEquals(SchedulerTriggerState.NONE, job.getTriggerState());
+        assertNull(job.getCronExpression());
+        assertNull(job.getNextFireTime());
+        assertNull(job.getPreviousFireTime());
+    }
+
+    @Test
+    void listJobsReportsATriggerThatIsNotACronTriggerWithoutAnExpression() throws Exception {
+        JobKey jobKey = new JobKey("job1", JobConstants.GROUP_NAME);
+        TriggerKey triggerKey = SchedulerUtils.triggerKey("job1");
+        Date next = Date.from(Instant.parse("2026-09-29T12:00:00Z"));
+        SimpleTriggerImpl trigger = new SimpleTriggerImpl();
+        trigger.setKey(triggerKey);
+        trigger.setNextFireTime(next);
+        when(scheduler.getJobKeys(any(GroupMatcher.class))).thenReturn(Set.of(jobKey));
+        when(scheduler.getJobDetail(jobKey)).thenReturn(jobDetailFor(jobKey));
+        when(scheduler.getTrigger(triggerKey)).thenReturn(trigger);
+        when(scheduler.getTriggerState(triggerKey)).thenReturn(Trigger.TriggerState.NORMAL);
+
+        SchedulerJobDto job = schedulerService.listJobs().getSchedulerJobList().get(0);
+
+        assertNull(job.getCronExpression());
+        assertEquals(next.toInstant(), job.getNextFireTime());
+        assertEquals(SchedulerTriggerState.NORMAL, job.getTriggerState());
+    }
+
+    /** A job another node deletes between the key listing and its read is left out, not reported half-read. */
+    @Test
+    void listJobsLeavesOutAJobDeletedWhileBeingListed() throws Exception {
+        JobKey jobKey = new JobKey("job1", JobConstants.GROUP_NAME);
+        when(scheduler.getJobKeys(any(GroupMatcher.class))).thenReturn(Set.of(jobKey));
+        when(scheduler.getJobDetail(jobKey)).thenReturn(null);
+
+        SchedulerResponseDto response = schedulerService.listJobs();
+
+        assertEquals(SchedulerStatus.OK, response.getSchedulerStatus());
+        assertTrue(response.getSchedulerJobList().isEmpty());
+    }
+
+    @Test
+    void everyQuartzTriggerStateHasAWireValue() {
+        for (Trigger.TriggerState state : Trigger.TriggerState.values()) {
+            assertEquals(state.name(), SchedulerUtils.triggerStateOf(state).name());
+        }
     }
 
     @Test
@@ -414,6 +489,13 @@ class SchedulerServiceImplTest {
 
         assertErrorLoggedWith(cause);
         assertSame(cause, thrown.getCause(), CAUSE_MUST_BE_RETAINED);
+    }
+
+    private static JobDetailImpl jobDetailFor(JobKey jobKey) {
+        JobDetailImpl jobDetail = new JobDetailImpl();
+        jobDetail.setKey(jobKey);
+        jobDetail.getJobDataMap().put(JobConstants.CLASS_TOBE_EXECUTED, "com.test.Job1");
+        return jobDetail;
     }
 
     /**

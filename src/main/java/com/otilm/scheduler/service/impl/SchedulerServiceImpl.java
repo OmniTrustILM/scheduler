@@ -18,6 +18,7 @@ import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.Trigger;
+import org.quartz.TriggerKey;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,11 +90,11 @@ public class SchedulerServiceImpl implements SchedulerService {
         try {
             for (final JobKey jobKey : scheduler.getJobKeys(GroupMatcher.jobGroupEquals(JobConstants.GROUP_NAME))) {
                 final JobDetail jobDetail = scheduler.getJobDetail(jobKey);
-                final CronTrigger trigger = (CronTrigger) scheduler
-                        .getTrigger(SchedulerUtils.triggerKey(jobKey.getName()));
-                schedulerDetailList
-                        .add(new SchedulerJobDto(jobKey.getName(), trigger.getCronExpression(),
-                                jobDetail.getJobDataMap().getString(JobConstants.CLASS_TOBE_EXECUTED)));
+                if (jobDetail == null) {
+                    // Deleted by another node between the key listing and this read.
+                    continue;
+                }
+                schedulerDetailList.add(describe(jobKey, jobDetail));
             }
         } catch (org.quartz.SchedulerException e) {
             logger.error("Unable to retrieve list of registered jobs.", e);
@@ -103,6 +104,28 @@ public class SchedulerServiceImpl implements SchedulerService {
         final SchedulerResponseDto schedulerResponseDto = new SchedulerResponseDto(SchedulerStatus.OK);
         schedulerResponseDto.setSchedulerJobList(schedulerDetailList);
         return schedulerResponseDto;
+    }
+
+    /**
+     * What Quartz holds for one job: the trigger, looked up in the group prepareTrigger created it in, and that
+     * trigger's state -- NONE when the job has no trigger, which is a fact to report rather than a fault. Only a cron
+     * trigger has an expression to report; the fire times are any trigger's.
+     */
+    private SchedulerJobDto describe(final JobKey jobKey, final JobDetail jobDetail)
+            throws org.quartz.SchedulerException {
+        final TriggerKey triggerKey = SchedulerUtils.triggerKey(jobKey.getName());
+        final Trigger trigger = scheduler.getTrigger(triggerKey);
+        final String cronExpression = trigger instanceof CronTrigger cronTrigger
+                ? cronTrigger.getCronExpression()
+                : null;
+        final String className = jobDetail.getJobDataMap().getString(JobConstants.CLASS_TOBE_EXECUTED);
+        final SchedulerJobDto job = new SchedulerJobDto(jobKey.getName(), cronExpression, className);
+        job.setTriggerState(SchedulerUtils.triggerStateOf(scheduler.getTriggerState(triggerKey)));
+        if (trigger != null) {
+            job.setNextFireTime(SchedulerUtils.toInstant(trigger.getNextFireTime()));
+            job.setPreviousFireTime(SchedulerUtils.toInstant(trigger.getPreviousFireTime()));
+        }
+        return job;
     }
 
     @Override
