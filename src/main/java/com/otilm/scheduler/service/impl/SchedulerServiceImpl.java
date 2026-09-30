@@ -89,13 +89,10 @@ public class SchedulerServiceImpl implements SchedulerService {
         logger.debug("Retrieve list of registered jobs.");
         final List<SchedulerJobDto> schedulerDetailList = new ArrayList<>();
         try {
-            for (final JobKey jobKey : scheduler.getJobKeys(GroupMatcher.jobGroupEquals(JobConstants.GROUP_NAME))) {
-                final JobDetail jobDetail = scheduler.getJobDetail(jobKey);
-                if (jobDetail == null) {
-                    // Deleted by a concurrent request or node after the key listing.
-                    continue;
-                }
-                schedulerDetailList.add(describe(jobKey, jobDetail));
+            // Every job's detail in one read, not a key listing followed by a read per key.
+            for (final JobDetail jobDetail : scheduler
+                    .getJobDetails(GroupMatcher.jobGroupEquals(JobConstants.GROUP_NAME))) {
+                schedulerDetailList.add(describe(jobDetail));
             }
         } catch (org.quartz.SchedulerException e) {
             logger.error("Unable to retrieve list of registered jobs.", e);
@@ -119,23 +116,23 @@ public class SchedulerServiceImpl implements SchedulerService {
      * neither is guarded, and the next listing is right. Only a cron trigger has an expression to report; the fire
      * times are any trigger's.
      */
-    private SchedulerJobDto describe(final JobKey jobKey, final JobDetail jobDetail)
-            throws org.quartz.SchedulerException {
-        final TriggerKey triggerKey = SchedulerUtils.triggerKey(jobKey.getName());
+    private SchedulerJobDto describe(final JobDetail jobDetail) throws org.quartz.SchedulerException {
+        final String jobName = jobDetail.getKey().getName();
+        final TriggerKey triggerKey = SchedulerUtils.triggerKey(jobName);
         final String className = jobDetail.getJobDataMap().getString(JobConstants.CLASS_TOBE_EXECUTED);
         final Trigger trigger = scheduler.getTrigger(triggerKey);
         final Trigger.TriggerState state = trigger == null
                 ? Trigger.TriggerState.NONE
                 : scheduler.getTriggerState(triggerKey);
         if (state == Trigger.TriggerState.NONE) {
-            final SchedulerJobDto job = new SchedulerJobDto(jobKey.getName(), null, className);
+            final SchedulerJobDto job = new SchedulerJobDto(jobName, null, className);
             job.setTriggerState(SchedulerTriggerState.NONE);
             return job;
         }
         final String cronExpression = trigger instanceof CronTrigger cronTrigger
                 ? cronTrigger.getCronExpression()
                 : null;
-        final SchedulerJobDto job = new SchedulerJobDto(jobKey.getName(), cronExpression, className);
+        final SchedulerJobDto job = new SchedulerJobDto(jobName, cronExpression, className);
         job.setTriggerState(SchedulerUtils.triggerStateOf(state));
         job.setNextFireTime(SchedulerUtils.toInstant(trigger.getNextFireTime()));
         job.setPreviousFireTime(SchedulerUtils.toInstant(trigger.getPreviousFireTime()));
