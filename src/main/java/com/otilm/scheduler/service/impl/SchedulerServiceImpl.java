@@ -92,9 +92,7 @@ public class SchedulerServiceImpl implements SchedulerService {
             for (final JobKey jobKey : scheduler.getJobKeys(GroupMatcher.jobGroupEquals(JobConstants.GROUP_NAME))) {
                 final JobDetail jobDetail = scheduler.getJobDetail(jobKey);
                 if (jobDetail == null) {
-                    // Deleted by a concurrent request or node after the key listing. Only this window is guarded: a
-                    // trigger gone by the time describe reads it reports NONE, but a read Quartz itself fails (a delete
-                    // and a re-create inside getTrigger's own reads) still fails this listing; the next one is right.
+                    // Deleted by a concurrent request or node after the key listing.
                     continue;
                 }
                 schedulerDetailList.add(describe(jobKey, jobDetail));
@@ -111,24 +109,34 @@ public class SchedulerServiceImpl implements SchedulerService {
 
     /**
      * What Quartz holds for one job: the trigger, looked up in the group prepareTrigger created it in, and that
-     * trigger's state -- NONE when the job has no trigger, which is a fact to report rather than a fault. The state is
-     * read only for a trigger this read found, so a trigger created after it cannot lend its state to a job reported
-     * without fire times. Only a cron trigger has an expression to report; the fire times are any trigger's.
+     * trigger's state. A job without a trigger is reported NONE, with no expression and no fire times: a fact to report
+     * rather than a fault. Quartz has no bulk read of triggers, so the trigger and its state are two reads per job, and
+     * a delete or updateJob can land between them. The state is read only for a trigger the first read found, so a
+     * trigger created after it cannot lend its state to a job reported without fire times; a state read as NONE means
+     * the trigger was gone by then, so the job is reported as one without a trigger rather than with the fire times of
+     * a trigger that no longer exists. A delete and a re-create both landing between the two reads report the new
+     * trigger's state with the old one's fire times, and both landing inside getTrigger's own reads fail this listing;
+     * neither is guarded, and the next listing is right. Only a cron trigger has an expression to report; the fire
+     * times are any trigger's.
      */
     private SchedulerJobDto describe(final JobKey jobKey, final JobDetail jobDetail)
             throws org.quartz.SchedulerException {
         final TriggerKey triggerKey = SchedulerUtils.triggerKey(jobKey.getName());
-        final Trigger trigger = scheduler.getTrigger(triggerKey);
-        final String cronExpression = trigger instanceof CronTrigger cronTrigger
-                ? cronTrigger.getCronExpression()
-                : null;
         final String className = jobDetail.getJobDataMap().getString(JobConstants.CLASS_TOBE_EXECUTED);
-        final SchedulerJobDto job = new SchedulerJobDto(jobKey.getName(), cronExpression, className);
-        if (trigger == null) {
+        final Trigger trigger = scheduler.getTrigger(triggerKey);
+        final Trigger.TriggerState state = trigger == null
+                ? Trigger.TriggerState.NONE
+                : scheduler.getTriggerState(triggerKey);
+        if (state == Trigger.TriggerState.NONE) {
+            final SchedulerJobDto job = new SchedulerJobDto(jobKey.getName(), null, className);
             job.setTriggerState(SchedulerTriggerState.NONE);
             return job;
         }
-        job.setTriggerState(SchedulerUtils.triggerStateOf(scheduler.getTriggerState(triggerKey)));
+        final String cronExpression = trigger instanceof CronTrigger cronTrigger
+                ? cronTrigger.getCronExpression()
+                : null;
+        final SchedulerJobDto job = new SchedulerJobDto(jobKey.getName(), cronExpression, className);
+        job.setTriggerState(SchedulerUtils.triggerStateOf(state));
         job.setNextFireTime(SchedulerUtils.toInstant(trigger.getNextFireTime()));
         job.setPreviousFireTime(SchedulerUtils.toInstant(trigger.getPreviousFireTime()));
         return job;

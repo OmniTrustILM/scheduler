@@ -307,6 +307,34 @@ class SchedulerServiceImplTest {
         verify(scheduler, never()).getTriggerState(any(TriggerKey.class));
     }
 
+    /**
+     * A trigger deleted, or replaced by updateJob, after it was read answers NONE when its state is asked for. The job
+     * is then reported as one without a trigger, not with the fire times and expression of a trigger that is gone.
+     */
+    @Test
+    void listJobsReportsATriggerGoneBeforeItsStateIsReadAsNoneWithoutItsFireTimes() throws Exception {
+        JobKey jobKey = new JobKey("job1", JobConstants.GROUP_NAME);
+        TriggerKey triggerKey = SchedulerUtils.triggerKey("job1");
+        CronTriggerImpl trigger = new CronTriggerImpl();
+        trigger.setCronExpression("0 0 12 * * ?");
+        trigger.setKey(triggerKey);
+        trigger.setPreviousFireTime(Date.from(Instant.parse("2026-09-29T10:00:00Z")));
+        trigger.setNextFireTime(Date.from(Instant.parse("2026-09-29T12:00:00Z")));
+        when(scheduler.getJobKeys(any(GroupMatcher.class))).thenReturn(Set.of(jobKey));
+        when(scheduler.getJobDetail(jobKey)).thenReturn(jobDetailFor(jobKey, "com.test.Job1"));
+        when(scheduler.getTrigger(triggerKey)).thenReturn(trigger);
+        when(scheduler.getTriggerState(triggerKey)).thenReturn(Trigger.TriggerState.NONE);
+
+        SchedulerJobDto job = schedulerService.listJobs().getSchedulerJobList().get(0);
+
+        assertEquals("job1", job.getJobName());
+        assertEquals("com.test.Job1", job.getClassNameToBeExecuted());
+        assertEquals(SchedulerTriggerState.NONE, job.getTriggerState());
+        assertNull(job.getCronExpression());
+        assertNull(job.getNextFireTime());
+        assertNull(job.getPreviousFireTime());
+    }
+
     @Test
     void listJobsReportsATriggerThatIsNotACronTriggerWithoutAnExpression() throws Exception {
         JobKey jobKey = new JobKey("job1", JobConstants.GROUP_NAME);
