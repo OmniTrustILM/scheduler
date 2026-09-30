@@ -3,9 +3,8 @@ package com.otilm.scheduler.service.impl;
 import com.otilm.api.model.scheduler.SchedulerJobDto;
 import com.otilm.api.model.scheduler.SchedulerRequestDto;
 import com.otilm.api.model.scheduler.SchedulerTriggerState;
-import java.time.Duration;
+import com.otilm.scheduler.utils.SchedulerUtils;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +13,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.quartz.CronTrigger;
 import org.quartz.Scheduler;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.GroupMatcher;
@@ -66,12 +66,15 @@ class SchedulerServiceImplQuartzRoundTripTest {
         assertEquals(CLASS_NAME, created.getClassNameToBeExecuted());
         assertEquals(SchedulerTriggerState.NORMAL, created.getTriggerState());
         assertNotNull(created.getNextFireTime());
-        // The trigger's own next fire: the next half past, within the hour ahead.
-        ZonedDateTime next = created.getNextFireTime().atZone(ZoneId.systemDefault());
+        // The trigger's own next fire: half past, read in the zone the trigger fires in, and not before the job was
+        // created. No bound on how far ahead: across a daylight-saving change the next local half past can be nearly
+        // two real hours away.
+        CronTrigger stored = (CronTrigger) quartz.getTrigger(SchedulerUtils.triggerKey(JOB_NAME));
+        assertEquals(stored.getNextFireTime().toInstant(), created.getNextFireTime());
+        ZonedDateTime next = created.getNextFireTime().atZone(stored.getTimeZone().toZoneId());
         assertEquals(30, next.getMinute());
         assertEquals(0, next.getSecond());
         assertFalse(created.getNextFireTime().isBefore(before.minusSeconds(1)));
-        assertTrue(created.getNextFireTime().isBefore(before.plus(Duration.ofHours(1)).plusSeconds(1)));
         // Never started, so never fired.
         assertNull(created.getPreviousFireTime());
 
