@@ -1,12 +1,16 @@
 package com.otilm.scheduler.utils;
 
+import com.otilm.api.model.scheduler.SchedulerTriggerState;
 import com.otilm.scheduler.constants.JobConstants;
 import com.otilm.scheduler.jobs.SchedulerJob;
+import java.time.Instant;
+import java.util.Date;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import org.quartz.TriggerKey;
 
 public class SchedulerUtils {
 
@@ -21,9 +25,30 @@ public class SchedulerUtils {
     public static Trigger prepareTrigger(final String jobName, final String cronExpression) {
         return TriggerBuilder
                 .newTrigger()
-                .withIdentity(jobName + JobConstants.JOB_TRIGGER_SUFFIX, JobConstants.GROUP_NAME)
+                .withIdentity(triggerKey(jobName))
                 .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
                 .build();
+    }
+
+    /** The one key a job's trigger is created, read and removed by: in the job's group, not Quartz's default one. */
+    public static TriggerKey triggerKey(final String jobName) {
+        return new TriggerKey(jobName + JobConstants.JOB_TRIGGER_SUFFIX, JobConstants.GROUP_NAME);
+    }
+
+    /** Quartz's state, spelled for the wire; the switch is exhaustive so a new Quartz state fails to compile here. */
+    public static SchedulerTriggerState triggerStateOf(final Trigger.TriggerState state) {
+        return switch (state) {
+            case NONE -> SchedulerTriggerState.NONE;
+            case NORMAL -> SchedulerTriggerState.NORMAL;
+            case PAUSED -> SchedulerTriggerState.PAUSED;
+            case COMPLETE -> SchedulerTriggerState.COMPLETE;
+            case ERROR -> SchedulerTriggerState.ERROR;
+            case BLOCKED -> SchedulerTriggerState.BLOCKED;
+        };
+    }
+
+    public static Instant toInstant(final Date date) {
+        return date == null ? null : date.toInstant();
     }
 
 }
