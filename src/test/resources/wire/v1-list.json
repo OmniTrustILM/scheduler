@@ -1,0 +1,17 @@
+{
+  "status" : 200,
+  "contentType" : "application/json",
+  "body" : {
+    "schedulerJobList" : [ {
+      "classNameToBeExecuted" : "com.otilm.core.tasks.WireGoldenTask",
+      "cronExpression" : "0 0 0 1 1 ? 2099",
+      "jobName" : "WireGoldenTask",
+      "nextFireTime" : "9999-99-99T99:99:99<zone>",
+      "previousFireTime" : null,
+      "triggerState" : "NORMAL",
+      "uuidJob" : null
+    } ],
+    "schedulerName" : null,
+    "schedulerStatus" : "OK"
+  }
+}
