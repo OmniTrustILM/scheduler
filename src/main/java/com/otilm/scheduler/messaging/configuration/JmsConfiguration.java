@@ -2,7 +2,6 @@ package com.otilm.scheduler.messaging.configuration;
 
 import com.azure.core.credential.TokenCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.jms.ConnectionFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.qpid.jms.JmsConnectionExtensions;
@@ -119,10 +118,10 @@ public class JmsConfiguration {
         return pool;
     }
 
+    /** Core reads these messages with Jackson 2, so they are written with it too. */
     @Bean
-    public MessageConverter messageConverter(ObjectMapper objectMapper) {
+    public MessageConverter messageConverter() {
         MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
-        converter.setObjectMapper(objectMapper);
         converter.setTargetType(MessageType.TEXT);
         return converter;
     }
