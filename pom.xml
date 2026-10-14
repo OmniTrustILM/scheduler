@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.otilm</groupId>
         <artifactId>dependencies</artifactId>
-        <version>1.4.3-SNAPSHOT</version>
+        <version>2.20.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>scheduler</artifactId>
@@ -21,6 +21,10 @@
         <sonar.organization>ilm</sonar.organization>
         <sonar.projectKey>ilm_scheduler</sonar.projectKey>
         <sonar.coverage.exclusions>src/main/java/com/otilm/scheduler/controllers/**,src/main/java/com/otilm/scheduler/*.java</sonar.coverage.exclusions>
+
+        <!-- Boot 4.1 manages Liquibase 5, which is licensed under the source-available FSL-1.1-ALv2, not Apache-2.0.
+             4.33.0 is the last Apache-2.0 release and gets no further fixes; drop this once the migrations leave Liquibase. -->
+        <liquibase.version>4.33.0</liquibase.version>
     </properties>
 
     <dependencies>
@@ -45,7 +49,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -62,6 +66,10 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-jms</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-jms</artifactId>
         </dependency>
         <dependency>
             <groupId>jakarta.jms</groupId>
@@ -99,8 +107,8 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>org.liquibase</groupId>
-            <artifactId>liquibase-core</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-liquibase</artifactId>
             <exclusions>
                 <!-- Superseded by jakarta.xml.bind-api, which Quartz already provides -->
                 <exclusion>
@@ -124,6 +132,11 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -144,7 +157,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <executable>true</executable>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>

@@ -1,0 +1,8 @@
+{
+  "status" : 503,
+  "contentType" : "application/vnd.spring-boot.actuator.v3+json",
+  "body" : {
+    "groups" : [ "liveness", "readiness" ],
+    "status" : "DOWN"
+  }
+}

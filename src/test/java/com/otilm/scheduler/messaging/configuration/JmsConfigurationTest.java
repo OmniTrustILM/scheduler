@@ -1,6 +1,5 @@
 package com.otilm.scheduler.messaging.configuration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.jms.ConnectionFactory;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -139,7 +138,7 @@ class JmsConfigurationTest {
 
     @Test
     void messageConverter_targetTypeIsText() {
-        MessageConverter converter = jmsConfiguration.messageConverter(new ObjectMapper());
+        MessageConverter converter = jmsConfiguration.messageConverter();
 
         MappingJackson2MessageConverter jacksonConverter = assertInstanceOf(MappingJackson2MessageConverter.class,
                 converter);
@@ -154,7 +153,7 @@ class JmsConfigurationTest {
                 "amqps://sb.servicebus.windows.net", null, null, "user", "pass", null, "exchange", null, null, null);
         ConnectionFactory innerFactory = jmsConfiguration.connectionFactory(props);
         JmsPoolConnectionFactory pool = jmsConfiguration.producerConnectionFactory(innerFactory, props);
-        MessageConverter converter = jmsConfiguration.messageConverter(new ObjectMapper());
+        MessageConverter converter = jmsConfiguration.messageConverter();
 
         try {
             JmsTemplate template = jmsConfiguration.jmsTemplate(pool, converter, props);
@@ -170,7 +169,7 @@ class JmsConfigurationTest {
                 "amqp://localhost:5672", null, null, "user", "pass", null, "exchange", null, null, null);
         ConnectionFactory innerFactory = jmsConfiguration.connectionFactory(props);
         JmsPoolConnectionFactory pool = jmsConfiguration.producerConnectionFactory(innerFactory, props);
-        MessageConverter converter = jmsConfiguration.messageConverter(new ObjectMapper());
+        MessageConverter converter = jmsConfiguration.messageConverter();
 
         try {
             JmsTemplate template = jmsConfiguration.jmsTemplate(pool, converter, props);

@@ -1,0 +1,7 @@
+{
+  "status" : 200,
+  "contentType" : "application/vnd.spring-boot.actuator.v3+json",
+  "body" : {
+    "status" : "UP"
+  }
+}

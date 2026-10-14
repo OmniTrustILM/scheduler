@@ -1,0 +1,7 @@
+{
+  "status" : 400,
+  "contentType" : "application/json",
+  "body" : {
+    "message" : "JSON parse error: <parser message>"
+  }
+}

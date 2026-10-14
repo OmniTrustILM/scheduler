@@ -1,0 +1,11 @@
+{
+  "status" : 200,
+  "contentType" : "application/hal+json",
+  "body" : {
+    "_links" : {
+      "self" : {
+        "href" : "http://localhost:<port>/profile"
+      }
+    }
+  }
+}

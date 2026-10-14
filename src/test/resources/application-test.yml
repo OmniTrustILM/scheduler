@@ -1,0 +1,16 @@
+# Test-only overrides on top of the shipped application.yml, replacing only what a test cannot reach.
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    # The pool selects the schema by its exact name before SchemaInit runs, and H2 folds unquoted names to upper case,
+    # so the schema exists from the first connection and is selected in upper case.
+    url: jdbc:h2:mem:scheduler;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;INIT=CREATE SCHEMA IF NOT EXISTS SCHEDULER
+    username: sa
+    password:
+    hikari:
+      schema: SCHEDULER
+  messaging:
+    # A closed port, so the broker reads as down and every send fails at once.
+    broker-url: amqp://127.0.0.1:1
+    username: test
+    password: test

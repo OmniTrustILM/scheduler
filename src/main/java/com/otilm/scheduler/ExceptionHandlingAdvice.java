@@ -64,7 +64,7 @@ public class ExceptionHandlingAdvice {
      * @return Error message in the payload
      */
     @ExceptionHandler(ValidationException.class)
-    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_CONTENT)
     public List<String> handleValidationException(ValidationException ex) {
         LOG.info("HTTP 422: {}", ex.getMessage());
 
