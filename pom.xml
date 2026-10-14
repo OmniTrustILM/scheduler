@@ -21,6 +21,10 @@
         <sonar.organization>ilm</sonar.organization>
         <sonar.projectKey>ilm_scheduler</sonar.projectKey>
         <sonar.coverage.exclusions>src/main/java/com/otilm/scheduler/controllers/**,src/main/java/com/otilm/scheduler/*.java</sonar.coverage.exclusions>
+
+        <!-- Boot 4.1 manages Liquibase 5, which is licensed under the source-available FSL-1.1-ALv2, not Apache-2.0.
+             4.33.0 is the last Apache-2.0 release and gets no further fixes; drop this once the migrations leave Liquibase. -->
+        <liquibase.version>4.33.0</liquibase.version>
     </properties>
 
     <dependencies>
