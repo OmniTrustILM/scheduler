@@ -13,7 +13,9 @@ FROM eclipse-temurin:21-jre-alpine
 
 LABEL org.opencontainers.image.authors="ILM <support@otilm.com>"
 
-# apply outstanding Alpine security updates on top of the base image
+# apply outstanding Alpine security updates on top of the base image;
+# VERSION changes per release, so a tag build never reuses a cached, outdated upgrade layer
+ARG VERSION
 RUN apk --no-cache upgrade
 
 # add non root user otilm
